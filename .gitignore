@@ -71,3 +71,6 @@ Tuist/.build
 
 ### Firebase ###
 **/GoogleService-Info.plist
+# Claude Code
+.agents/
+skills-lock.json
