@@ -35,7 +35,12 @@ struct EditMeetingView: View {
 
                 Button(action: {
                     Haptic.medium()
-                    onSaved(meeting)
+                    var updated = meeting
+                    updated.meetingDate = date
+                    updated.place = place
+                    updated.activity = activity.isEmpty ? nil : activity
+                    updated.updatedAt = Date()
+                    onSaved(updated)
                 }) {
                     Text("저장")
                         .font(.body)

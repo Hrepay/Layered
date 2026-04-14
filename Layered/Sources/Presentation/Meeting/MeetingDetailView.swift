@@ -2,12 +2,24 @@ import SwiftUI
 import MapKit
 
 struct MeetingDetailView: View {
-    let meeting: Meeting
+    @State private var meeting: Meeting
     let onBack: () -> Void
+    var onDeleted: (() -> Void)?
+    var onUpdated: (() -> Void)?
+
+    @Environment(AppState.self) private var appState: AppState?
+
     @State private var showDeleteAlert = false
     @State private var showEdit = false
-    @State private var showPollVote = false
-    @State private var showPollResult = false
+    @State private var showPoll = false
+    @State private var poll: Poll?
+
+    init(meeting: Meeting, onBack: @escaping () -> Void, onDeleted: (() -> Void)? = nil, onUpdated: (() -> Void)? = nil) {
+        _meeting = State(initialValue: meeting)
+        self.onBack = onBack
+        self.onDeleted = onDeleted
+        self.onUpdated = onUpdated
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -68,7 +80,7 @@ struct MeetingDetailView: View {
                     }
 
                     // 투표 섹션
-                    if meeting.hasPoll {
+                    if meeting.hasPoll, poll != nil {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("투표")
                                 .font(.subheadline)
@@ -77,32 +89,12 @@ struct MeetingDetailView: View {
 
                             Button(action: {
                                 Haptic.light()
-                                showPollVote = true
+                                showPoll = true
                             }) {
                                 HStack {
                                     Image(systemName: "chart.bar.fill")
                                         .foregroundStyle(AppColors.info)
-                                    Text("투표 참여하기")
-                                        .font(.subheadline)
-                                        .fontWeight(.medium)
-                                        .foregroundStyle(.primary)
-                                    Spacer()
-                                    Image(systemName: "chevron.right")
-                                        .font(.caption)
-                                        .foregroundStyle(.tertiary)
-                                }
-                                .card()
-                            }
-                            .tappableCard()
-
-                            Button(action: {
-                                Haptic.light()
-                                showPollResult = true
-                            }) {
-                                HStack {
-                                    Image(systemName: "chart.pie.fill")
-                                        .foregroundStyle(AppColors.secondary)
-                                    Text("투표 결과 보기")
+                                    Text("투표 참여 / 결과 보기")
                                         .font(.subheadline)
                                         .fontWeight(.medium)
                                         .foregroundStyle(.primary)
@@ -122,23 +114,44 @@ struct MeetingDetailView: View {
                 .padding(.bottom, 24)
             }
         }
+        .task {
+            if meeting.hasPoll, let appState {
+                let polls = try? await appState.getPolls(meetingId: meeting.id)
+                poll = polls?.first
+            }
+        }
         .fullScreenCover(isPresented: $showEdit) {
             EditMeetingView(meeting: meeting, onBack: {
                 showEdit = false
-            }, onSaved: { _ in
+            }, onSaved: { updatedMeeting in
                 showEdit = false
+                meeting = updatedMeeting
+                if let appState {
+                    Task {
+                        try? await appState.updateMeeting(updatedMeeting)
+                        onUpdated?()
+                    }
+                }
             })
         }
-        .fullScreenCover(isPresented: $showPollVote) {
-            PollVoteView(poll: MockData.poll, onBack: { showPollVote = false })
-        }
-        .fullScreenCover(isPresented: $showPollResult) {
-            PollResultView(poll: MockData.poll, onBack: { showPollResult = false })
+        .fullScreenCover(isPresented: $showPoll) {
+            if let poll {
+                PollVoteView(poll: poll, onBack: {
+                    showPoll = false
+                    refreshPoll()
+                }, meetingId: meeting.id)
+                    .environment(appState)
+            }
         }
         .alert("모임 삭제", isPresented: $showDeleteAlert) {
             Button("취소", role: .cancel) {}
             Button("삭제", role: .destructive) {
-                onBack()
+                if let appState {
+                    Task {
+                        try? await appState.deleteMeeting(meeting.id)
+                        onDeleted?()
+                    }
+                }
             }
         } message: {
             Text("정말 삭제하시겠습니까?\n관련 기록도 함께 삭제됩니다.")
@@ -176,6 +189,15 @@ struct MeetingDetailView: View {
                 Text(value)
                     .font(.subheadline)
                     .foregroundStyle(.primary)
+            }
+        }
+    }
+
+    private func refreshPoll() {
+        guard let appState, let currentPoll = poll else { return }
+        Task {
+            if let updated = try? await appState.getPoll(meetingId: meeting.id, pollId: currentPoll.id) {
+                poll = updated
             }
         }
     }

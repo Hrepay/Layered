@@ -2,13 +2,15 @@ import SwiftUI
 
 struct CreateMeetingView: View {
     let onBack: () -> Void
-    let onCreated: (Meeting) -> Void
+    let onCreated: (Meeting, Poll?) -> Void
+    @Environment(AppState.self) private var appState: AppState?
 
     @State private var date = Date()
     @State private var place = ""
     @State private var activity = ""
     @State private var showPollCreation = false
     @State private var hasPoll = false
+    @State private var createdPoll: Poll?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -18,7 +20,21 @@ struct CreateMeetingView: View {
                 trailingText: "등록",
                 trailingAction: {
                     Haptic.medium()
-                    onCreated(MockData.meetings[0])
+                    let meeting = Meeting(
+                        id: UUID().uuidString,
+                        plannerId: appState?.currentUser?.id ?? "",
+                        plannerName: appState?.currentUser?.name ?? "",
+                        meetingDate: date,
+                        place: place,
+                        placeLatitude: nil,
+                        placeLongitude: nil,
+                        activity: activity.isEmpty ? nil : activity,
+                        status: .planning,
+                        hasPoll: hasPoll,
+                        createdAt: Date(),
+                        updatedAt: Date()
+                    )
+                    onCreated(meeting, createdPoll)
                 },
                 trailingDisabled: place.isEmpty
             )
@@ -97,7 +113,8 @@ struct CreateMeetingView: View {
         .fullScreenCover(isPresented: $showPollCreation) {
             CreatePollView(onBack: {
                 showPollCreation = false
-            }, onCreated: { _ in
+            }, onCreated: { poll in
+                createdPoll = poll
                 hasPoll = true
                 showPollCreation = false
             })
@@ -106,5 +123,5 @@ struct CreateMeetingView: View {
 }
 
 #Preview {
-    CreateMeetingView(onBack: {}, onCreated: { _ in })
+    CreateMeetingView(onBack: {}, onCreated: { _, _ in })
 }
