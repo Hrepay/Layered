@@ -65,16 +65,8 @@ struct PollVoteView: View {
                         .fontWeight(.bold)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
-                    // MARK: - 남은 시간 + 익명 뱃지 + 참여 수
+                    // MARK: - 익명 뱃지 + 참여 수
                     HStack(spacing: 10) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "clock.fill")
-                                .font(.caption)
-                            Text(remainingText)
-                                .font(.caption)
-                        }
-                        .foregroundStyle(AppColors.secondary)
-
                         if poll.isAnonymous {
                             BadgeView(text: "익명 투표", color: AppColors.info)
                         }
@@ -250,16 +242,6 @@ struct PollVoteView: View {
                 hasVoted = true
             }
         }
-    }
-
-    private var remainingText: String {
-        let remaining = poll.deadline.timeIntervalSince(Date())
-        if remaining <= 0 { return "마감됨" }
-        let hours = Int(remaining) / 3600
-        if hours >= 24 {
-            return "\(hours / 24)일 \(hours % 24)시간 남음"
-        }
-        return "\(hours)시간 남음"
     }
 
     private func voterNames(for ids: [String]) -> String {

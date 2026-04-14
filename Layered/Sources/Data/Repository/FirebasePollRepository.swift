@@ -26,8 +26,6 @@ final class FirebasePollRepository: PollRepositoryProtocol {
             "question": poll.question,
             "isAnonymous": poll.isAnonymous,
             "allowMultiple": poll.allowMultiple,
-            "deadline": Timestamp(date: poll.deadline),
-            "status": poll.status.rawValue,
             "options": optionsData,
             "createdAt": Timestamp(date: Date()),
         ]
@@ -45,8 +43,6 @@ final class FirebasePollRepository: PollRepositoryProtocol {
             question: poll.question,
             isAnonymous: poll.isAnonymous,
             allowMultiple: poll.allowMultiple,
-            deadline: poll.deadline,
-            status: poll.status,
             options: poll.options,
             createdAt: Date()
         )
@@ -109,11 +105,6 @@ final class FirebasePollRepository: PollRepositoryProtocol {
         try await ref.updateData(["options": options])
     }
 
-    func closePoll(familyId: String, meetingId: String, pollId: String) async throws {
-        try await pollsRef(familyId: familyId, meetingId: meetingId).document(pollId)
-            .updateData(["status": "closed"])
-    }
-
     func deletePoll(familyId: String, meetingId: String, pollId: String) async throws {
         try await pollsRef(familyId: familyId, meetingId: meetingId).document(pollId).delete()
         try await db.collection("families").document(familyId)
@@ -140,8 +131,6 @@ final class FirebasePollRepository: PollRepositoryProtocol {
             question: data["question"] as? String ?? "",
             isAnonymous: data["isAnonymous"] as? Bool ?? false,
             allowMultiple: data["allowMultiple"] as? Bool ?? false,
-            deadline: (data["deadline"] as? Timestamp)?.dateValue() ?? Date(),
-            status: Poll.Status(rawValue: data["status"] as? String ?? "open") ?? .open,
             options: options,
             createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? Date()
         )

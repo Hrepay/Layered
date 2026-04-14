@@ -20,6 +20,7 @@ enum MockData {
         memberCount: 3,
         currentPlannerIndex: 0,
         rotationDay: 1,
+        rotationMode: "auto",
         createdAt: Date()
     )
 
@@ -89,8 +90,6 @@ enum MockData {
         question: "어디로 갈까요?",
         isAnonymous: false,
         allowMultiple: false,
-        deadline: Calendar.current.date(byAdding: .day, value: 1, to: Date())!,
-        status: .open,
         options: [
             PollOption(id: "opt-1", title: "한강공원", description: "피크닉하기 좋은 날씨", imageURL: nil, voterIds: ["user-001"], voteCount: 1),
             PollOption(id: "opt-2", title: "북한산", description: "등산하기", imageURL: nil, voterIds: ["user-002", "user-003"], voteCount: 2),

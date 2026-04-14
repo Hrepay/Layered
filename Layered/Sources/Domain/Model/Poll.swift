@@ -5,15 +5,8 @@ struct Poll: Identifiable, Codable {
     var question: String
     var isAnonymous: Bool
     var allowMultiple: Bool
-    var deadline: Date
-    var status: Status
     var options: [PollOption]
     let createdAt: Date
-
-    enum Status: String, Codable {
-        case open
-        case closed
-    }
 }
 
 struct PollOption: Identifiable, Codable {

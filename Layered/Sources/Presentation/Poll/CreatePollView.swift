@@ -7,7 +7,6 @@ struct CreatePollView: View {
     @State private var question = ""
     @State private var options: [String] = ["", ""]
     @State private var isAnonymous = false
-    @State private var deadline = Date().addingTimeInterval(3 * 24 * 3600)
 
     var body: some View {
         VStack(spacing: 0) {
@@ -33,8 +32,6 @@ struct CreatePollView: View {
                         question: question,
                         isAnonymous: isAnonymous,
                         allowMultiple: true,
-                        deadline: deadline,
-                        status: .open,
                         options: pollOptions,
                         createdAt: Date()
                     )
@@ -122,23 +119,6 @@ struct CreatePollView: View {
                             .tint(AppColors.primary)
                     }
                     .card()
-
-                    // MARK: - 마감 시간
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("마감 시간")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(.secondary)
-
-                        DatePicker(
-                            "",
-                            selection: $deadline,
-                            in: Date()...,
-                            displayedComponents: [.date, .hourAndMinute]
-                        )
-                        .labelsHidden()
-                        .tint(AppColors.primary)
-                    }
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
