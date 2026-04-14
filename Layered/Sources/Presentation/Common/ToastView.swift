@@ -43,13 +43,13 @@ struct ToastModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .overlay(alignment: .top) {
+            .overlay(alignment: .bottom) {
                 if let toast {
                     ToastView(type: toast.type, message: toast.message)
-                        .padding(.top, 8)
-                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .padding(.bottom, 120)
+                        .transition(.opacity.combined(with: .scale(scale: 0.9)))
                         .onAppear {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                                 withAnimation { self.toast = nil }
                             }
                         }
