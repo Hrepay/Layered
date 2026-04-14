@@ -25,12 +25,13 @@ final class FirebaseMemberRepository: MemberRepositoryProtocol {
     }
 
     func removeMember(familyId: String, memberId: String) async throws {
-        try await membersRef(familyId: familyId).document(memberId).delete()
-
-        // memberCount 감소
+        // memberCount 감소 (구성원인 동안 먼저 실행)
         try await db.collection("families").document(familyId).updateData([
             "memberCount": FieldValue.increment(Int64(-1))
         ])
+
+        // member 삭제
+        try await membersRef(familyId: familyId).document(memberId).delete()
 
         // User의 familyId 제거
         try await db.collection("users").document(memberId).updateData([

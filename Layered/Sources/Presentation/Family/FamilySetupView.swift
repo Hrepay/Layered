@@ -4,6 +4,7 @@ enum FamilySetupStep {
     case select
     case create
     case profile(familyName: String)
+    case joinProfile(Family)
     case inviteShare(String)
     case join
 }
@@ -27,8 +28,8 @@ struct FamilySetupView: View {
             case .profile(let familyName):
                 ProfileSetupView(onBack: {
                     step = .create
-                }, onComplete: { profileName in
-                    createFamily(familyName: familyName, profileName: profileName)
+                }, onComplete: { profileName, image in
+                    createFamily(familyName: familyName, profileName: profileName, image: image)
                 })
             case .inviteShare(let code):
                 InviteCodeShareView(inviteCode: code, onDone: {
@@ -40,21 +41,47 @@ struct FamilySetupView: View {
                 JoinFamilyView(onBack: {
                     step = .select
                 }, onJoined: { family in
-                    onJoined(family)
+                    step = .joinProfile(family)
                 })
                 .environment(appState)
+            case .joinProfile(let family):
+                ProfileSetupView(onBack: {
+                    step = .join
+                }, onComplete: { profileName, image in
+                    guard let appState, let userId = appState.currentUser?.id else { return }
+                    appState.isLoading = true
+                    Task {
+                        do {
+                            if let image {
+                                try await appState.uploadProfileImage(image)
+                            }
+                            try await appState.updateProfile(name: profileName, profileImageURL: appState.currentUser?.profileImageURL)
+                            // 프로필 완료 후 실제 가정 참여
+                            try await appState.familyRepository.joinFamily(familyId: family.id, userId: userId, userName: profileName)
+                            appState.isLoading = false
+                            onJoined(family)
+                        } catch {
+                            appState.errorMessage = error.localizedDescription
+                            appState.isLoading = false
+                        }
+                    }
+                })
             }
         }
         .animation(.easeInOut(duration: 0.25), value: String(describing: step))
     }
 
-    private func createFamily(familyName: String, profileName: String) {
+    private func createFamily(familyName: String, profileName: String, image: UIImage? = nil) {
         guard let appState, let userId = appState.currentUser?.id else { return }
         appState.isLoading = true
         Task {
             do {
+                // 프로필 사진 업로드
+                if let image {
+                    try await appState.uploadProfileImage(image)
+                }
                 // 프로필 이름 업데이트
-                try await appState.updateProfile(name: profileName, profileImageURL: nil)
+                try await appState.updateProfile(name: profileName, profileImageURL: appState.currentUser?.profileImageURL)
                 // 가정 생성
                 let family = try await appState.familyRepository.createFamily(
                     name: familyName,

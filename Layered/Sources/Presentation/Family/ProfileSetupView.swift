@@ -2,9 +2,10 @@ import SwiftUI
 
 struct ProfileSetupView: View {
     let onBack: () -> Void
-    let onComplete: (String) -> Void
+    let onComplete: (String, UIImage?) -> Void
     @State private var name = ""
     @State private var showImagePicker = false
+    @State private var selectedImage: UIImage?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -13,7 +14,7 @@ struct ProfileSetupView: View {
                 trailingText: "완료",
                 trailingAction: {
                     Haptic.light()
-                    onComplete(name)
+                    onComplete(name, selectedImage)
                 },
                 trailingDisabled: name.isEmpty
             )
@@ -34,7 +35,15 @@ struct ProfileSetupView: View {
                 showImagePicker = true
             }) {
                 ZStack(alignment: .bottomTrailing) {
-                    AvatarView(name: name.isEmpty ? " " : name, size: 100)
+                    if let image = selectedImage {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 100, height: 100)
+                            .clipShape(Circle())
+                    } else {
+                        AvatarView(name: name.isEmpty ? " " : name, size: 100)
+                    }
 
                     Image(systemName: "camera.fill")
                         .font(.system(size: 14))
@@ -61,9 +70,12 @@ struct ProfileSetupView: View {
 
             Spacer()
         }
+        .sheet(isPresented: $showImagePicker) {
+            ImagePicker(selectedImage: $selectedImage)
+        }
     }
 }
 
 #Preview {
-    ProfileSetupView(onBack: {}, onComplete: { _ in })
+    ProfileSetupView(onBack: {}, onComplete: { _, _ in })
 }

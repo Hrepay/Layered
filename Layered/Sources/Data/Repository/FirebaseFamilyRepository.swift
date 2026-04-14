@@ -59,9 +59,11 @@ final class FirebaseFamilyRepository: FamilyRepositoryProtocol {
     }
 
     func deleteFamily(id: String) async throws {
-        // 서브컬렉션 삭제 (members, meetings 등)는 Cloud Functions에서 처리하는 게 이상적
-        // 일단 family 문서만 삭제
         try await familiesRef.document(id).delete()
+    }
+
+    func updateFamilyName(familyId: String, name: String) async throws {
+        try await familiesRef.document(familyId).updateData(["name": name])
     }
 
     func generateInviteCode(familyId: String) async throws -> String {
@@ -74,8 +76,7 @@ final class FirebaseFamilyRepository: FamilyRepositoryProtocol {
         return code
     }
 
-    func joinFamily(inviteCode: String, userId: String) async throws -> Family {
-        // 초대 코드로 가정 검색
+    func verifyInviteCode(inviteCode: String) async throws -> Family {
         let snapshot = try await familiesRef
             .whereField("inviteCode", isEqualTo: inviteCode)
             .getDocuments()
@@ -95,11 +96,12 @@ final class FirebaseFamilyRepository: FamilyRepositoryProtocol {
             throw NSError(domain: "family", code: -3, userInfo: [NSLocalizedDescriptionKey: "가정 최대 인원(10명)을 초과했습니다"])
         }
 
-        let familyId = doc.documentID
+        return familyFromData(id: doc.documentID, data: data)
+    }
 
-        // User 이름 조회
-        let userDoc = try await db.collection("users").document(userId).getDocument()
-        let userName = userDoc.data()?["name"] as? String ?? "사용자"
+    func joinFamily(familyId: String, userId: String, userName: String) async throws {
+        let doc = try await familiesRef.document(familyId).getDocument()
+        let memberCount = doc.data()?["memberCount"] as? Int ?? 0
 
         // 멤버 추가
         try await familiesRef.document(familyId).collection("members").document(userId).setData([
@@ -115,8 +117,6 @@ final class FirebaseFamilyRepository: FamilyRepositoryProtocol {
             "memberCount": FieldValue.increment(Int64(1))
         ])
         try await db.collection("users").document(userId).updateData(["familyId": familyId])
-
-        return familyFromData(id: familyId, data: data)
     }
 
     // MARK: - Helpers

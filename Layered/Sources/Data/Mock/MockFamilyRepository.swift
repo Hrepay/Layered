@@ -10,12 +10,14 @@ final class MockFamilyRepository: FamilyRepositoryProtocol {
     }
 
     func deleteFamily(id: String) async throws {}
+    func updateFamilyName(familyId: String, name: String) async throws {}
 
     func generateInviteCode(familyId: String) async throws -> String {
         "ABC123"
     }
 
-    func joinFamily(inviteCode: String, userId: String) async throws -> Family {
+    func verifyInviteCode(inviteCode: String) async throws -> Family {
         MockData.family
     }
+    func joinFamily(familyId: String, userId: String, userName: String) async throws {}
 }

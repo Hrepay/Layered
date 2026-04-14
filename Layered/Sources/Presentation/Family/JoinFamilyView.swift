@@ -95,11 +95,11 @@ struct JoinFamilyView: View {
     }
 
     private func verifyCode() {
-        guard let appState, let userId = appState.currentUser?.id else { return }
+        guard let appState else { return }
         isLoading = true
         Task {
             do {
-                let family = try await appState.familyRepository.joinFamily(inviteCode: code, userId: userId)
+                let family = try await appState.familyRepository.verifyInviteCode(inviteCode: code)
                 previewFamily = family
                 withAnimation(.easeInOut(duration: 0.25)) {
                     showPreview = true
