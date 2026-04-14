@@ -2,17 +2,17 @@ import SwiftUI
 
 struct CreateFamilyView: View {
     let onBack: () -> Void
-    let onCreated: (Family) -> Void
+    let onCreated: (String) -> Void
     @State private var familyName = ""
 
     var body: some View {
         VStack(spacing: 0) {
             NavBar(
                 backAction: onBack,
-                trailingText: "만들기",
+                trailingText: "다음",
                 trailingAction: {
                     Haptic.light()
-                    onCreated(MockData.family)
+                    onCreated(familyName)
                 },
                 trailingDisabled: familyName.isEmpty
             )

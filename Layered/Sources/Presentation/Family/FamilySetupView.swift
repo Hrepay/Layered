@@ -3,13 +3,14 @@ import SwiftUI
 enum FamilySetupStep {
     case select
     case create
-    case inviteShare(String) // 초대 코드
+    case profile(familyName: String)
+    case inviteShare(String)
     case join
-    case profile
 }
 
 struct FamilySetupView: View {
     let onJoined: (Family) -> Void
+    @Environment(AppState.self) private var appState: AppState?
     @State private var step: FamilySetupStep = .select
 
     var body: some View {
@@ -20,28 +21,58 @@ struct FamilySetupView: View {
             case .create:
                 CreateFamilyView(onBack: {
                     step = .select
-                }, onCreated: { family in
-                    step = .inviteShare(family.inviteCode)
+                }, onCreated: { familyName in
+                    step = .profile(familyName: familyName)
+                })
+            case .profile(let familyName):
+                ProfileSetupView(onBack: {
+                    step = .create
+                }, onComplete: { profileName in
+                    createFamily(familyName: familyName, profileName: profileName)
                 })
             case .inviteShare(let code):
                 InviteCodeShareView(inviteCode: code, onDone: {
-                    step = .profile
+                    if let family = appState?.currentFamily {
+                        onJoined(family)
+                    }
                 })
             case .join:
                 JoinFamilyView(onBack: {
                     step = .select
-                }, onJoined: { _ in
-                    step = .profile
+                }, onJoined: { family in
+                    onJoined(family)
                 })
-            case .profile:
-                ProfileSetupView(onBack: {
-                    step = .select
-                }, onComplete: {
-                    onJoined(MockData.family)
-                })
+                .environment(appState)
             }
         }
         .animation(.easeInOut(duration: 0.25), value: String(describing: step))
+    }
+
+    private func createFamily(familyName: String, profileName: String) {
+        guard let appState, let userId = appState.currentUser?.id else { return }
+        appState.isLoading = true
+        Task {
+            do {
+                // 프로필 이름 업데이트
+                try await appState.updateProfile(name: profileName, profileImageURL: nil)
+                // 가정 생성
+                let family = try await appState.familyRepository.createFamily(
+                    name: familyName,
+                    adminId: userId
+                )
+                appState.currentFamily = family
+                // user.familyId 업데이트
+                var updatedUser = appState.currentUser!
+                updatedUser.familyId = family.id
+                try await appState.userRepository.updateUser(updatedUser)
+                appState.currentUser = updatedUser
+                await appState.loadHomeData()
+                step = .inviteShare(family.inviteCode)
+            } catch {
+                appState.errorMessage = error.localizedDescription
+            }
+            appState.isLoading = false
+        }
     }
 
     private var familySelectView: some View {

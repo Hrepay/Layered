@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ProfileSetupView: View {
     let onBack: () -> Void
-    let onComplete: () -> Void
+    let onComplete: (String) -> Void
     @State private var name = ""
     @State private var showImagePicker = false
 
@@ -13,7 +13,7 @@ struct ProfileSetupView: View {
                 trailingText: "완료",
                 trailingAction: {
                     Haptic.light()
-                    onComplete()
+                    onComplete(name)
                 },
                 trailingDisabled: name.isEmpty
             )
@@ -65,5 +65,5 @@ struct ProfileSetupView: View {
 }
 
 #Preview {
-    ProfileSetupView(onBack: {}, onComplete: {})
+    ProfileSetupView(onBack: {}, onComplete: { _ in })
 }

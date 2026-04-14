@@ -3,9 +3,13 @@ import SwiftUI
 struct JoinFamilyView: View {
     let onBack: () -> Void
     let onJoined: (Family) -> Void
+    @Environment(AppState.self) private var appState: AppState?
+
     @State private var code = ""
     @State private var showPreview = false
     @State private var showInvalidCodeAlert = false
+    @State private var previewFamily: Family?
+    @State private var isLoading = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -14,15 +18,13 @@ struct JoinFamilyView: View {
                 trailingText: showPreview ? "참여하기" : "확인",
                 trailingAction: {
                     Haptic.light()
-                    if showPreview {
-                        onJoined(MockData.family)
+                    if showPreview, let family = previewFamily {
+                        joinFamily(family)
                     } else {
-                        withAnimation(.easeInOut(duration: 0.25)) {
-                            showPreview = true
-                        }
+                        verifyCode()
                     }
                 },
-                trailingDisabled: code.isEmpty
+                trailingDisabled: code.isEmpty || isLoading
             )
 
             Spacer()
@@ -55,17 +57,17 @@ struct JoinFamilyView: View {
                 .padding(.horizontal, 24)
 
             // 가정 미리보기
-            if showPreview {
+            if showPreview, let family = previewFamily {
                 HStack(spacing: 14) {
                     Image(systemName: "house.fill")
                         .font(.title3)
                         .foregroundStyle(AppColors.primary)
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(MockData.family.name)
+                        Text(family.name)
                             .font(.headline)
 
-                        Text("구성원 \(MockData.family.memberCount)명")
+                        Text("구성원 \(family.memberCount)명")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -78,6 +80,11 @@ struct JoinFamilyView: View {
                 .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
 
+            if isLoading {
+                ProgressView()
+                    .padding(.top, 20)
+            }
+
             Spacer()
         }
         .alert("유효하지 않은 코드", isPresented: $showInvalidCodeAlert) {
@@ -85,6 +92,27 @@ struct JoinFamilyView: View {
         } message: {
             Text("유효하지 않은 코드입니다.\n코드를 다시 확인해주세요.")
         }
+    }
+
+    private func verifyCode() {
+        guard let appState, let userId = appState.currentUser?.id else { return }
+        isLoading = true
+        Task {
+            do {
+                let family = try await appState.familyRepository.joinFamily(inviteCode: code, userId: userId)
+                previewFamily = family
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    showPreview = true
+                }
+            } catch {
+                showInvalidCodeAlert = true
+            }
+            isLoading = false
+        }
+    }
+
+    private func joinFamily(_ family: Family) {
+        onJoined(family)
     }
 }
 
