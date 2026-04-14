@@ -1,0 +1,15 @@
+import Foundation
+
+final class MockMemberRepository: MemberRepositoryProtocol {
+    func getMembers(familyId: String) async throws -> [Member] {
+        MockData.members
+    }
+
+    func getMember(familyId: String, memberId: String) async throws -> Member {
+        MockData.members.first { $0.id == memberId } ?? MockData.members[0]
+    }
+
+    func removeMember(familyId: String, memberId: String) async throws {}
+
+    func updateRotationOrder(familyId: String, memberOrders: [(memberId: String, order: Int)]) async throws {}
+}
