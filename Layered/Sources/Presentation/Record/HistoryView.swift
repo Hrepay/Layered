@@ -125,14 +125,6 @@ struct HistoryView: View {
                                     }
                                 }
                                 .buttonStyle(.plain)
-                                .swipeActions(edge: .trailing) {
-                                    Button(role: .destructive) {
-                                        meetingToDelete = meeting
-                                        showDeleteAlert = true
-                                    } label: {
-                                        Label("삭제", systemImage: "trash")
-                                    }
-                                }
                             }
                         }
                         .padding(.horizontal, 20)

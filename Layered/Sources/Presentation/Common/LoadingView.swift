@@ -26,9 +26,11 @@ struct LoadingOverlay: ViewModifier {
                 if isLoading {
                     Color.black.opacity(0.2)
                         .ignoresSafeArea()
+                        .allowsHitTesting(true)
                     LoadingView()
                 }
             }
+            .allowsHitTesting(!isLoading)
     }
 }
 
