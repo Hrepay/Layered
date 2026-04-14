@@ -118,6 +118,7 @@ struct CreateMeetingView: View {
                 hasPoll = true
                 showPollCreation = false
             })
+            .environment(appState)
         }
     }
 }

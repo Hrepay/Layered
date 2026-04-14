@@ -89,10 +89,11 @@ struct FamilySetupView: View {
                 )
                 appState.currentFamily = family
                 // user.familyId 업데이트
-                var updatedUser = appState.currentUser!
-                updatedUser.familyId = family.id
-                try await appState.userRepository.updateUser(updatedUser)
-                appState.currentUser = updatedUser
+                if var updatedUser = appState.currentUser {
+                    updatedUser.familyId = family.id
+                    try await appState.userRepository.updateUser(updatedUser)
+                    appState.currentUser = updatedUser
+                }
                 await appState.loadHomeData()
                 step = .inviteShare(family.inviteCode)
             } catch {
