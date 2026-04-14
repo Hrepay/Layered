@@ -6,6 +6,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        FirebaseApp.configure()
         return true
     }
 }
@@ -13,10 +14,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 @main
 struct LayeredApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-
-    init() {
-        FirebaseApp.configure()
-    }
 
     var body: some Scene {
         WindowGroup {

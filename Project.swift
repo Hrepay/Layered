@@ -29,6 +29,7 @@ let project = Project(
             resources: [
                 "Layered/Resources/**",
             ],
+            entitlements: "Layered/Layered.entitlements",
             dependencies: [
                 .external(name: "FirebaseAuth"),
                 .external(name: "FirebaseFirestore"),
