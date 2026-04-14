@@ -2,8 +2,11 @@ import SwiftUI
 
 struct InviteMemberView: View {
     let onBack: () -> Void
-    @State private var inviteCode = "ABC123"
+    @Environment(AppState.self) private var appState: AppState?
+
+    @State private var inviteCode = ""
     @State private var copied = false
+    @State private var isLoadingCode = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -29,9 +32,14 @@ struct InviteMemberView: View {
 
             // 코드 카드
             VStack(spacing: 8) {
-                Text(inviteCode)
-                    .font(.system(size: 36, weight: .bold, design: .monospaced))
-                    .kerning(6)
+                if isLoadingCode {
+                    ProgressView()
+                        .frame(height: 44)
+                } else {
+                    Text(inviteCode)
+                        .font(.system(size: 36, weight: .bold, design: .monospaced))
+                        .kerning(6)
+                }
 
                 Text("30분 후 만료됩니다")
                     .font(.caption)
@@ -75,8 +83,7 @@ struct InviteMemberView: View {
             // 코드 재발급
             Button(action: {
                 Haptic.light()
-                inviteCode = String((0..<6).map { _ in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".randomElement()! })
-                copied = false
+                generateCode()
             }) {
                 Text("코드 재발급")
                     .font(.subheadline)
@@ -84,6 +91,26 @@ struct InviteMemberView: View {
             }
 
             Spacer()
+        }
+        .task {
+            generateCode()
+        }
+    }
+
+    private func generateCode() {
+        guard let appState else {
+            inviteCode = String((0..<6).map { _ in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".randomElement()! })
+            return
+        }
+        isLoadingCode = true
+        Task {
+            do {
+                inviteCode = try await appState.generateInviteCode()
+            } catch {
+                inviteCode = "ERROR"
+            }
+            isLoadingCode = false
+            copied = false
         }
     }
 }

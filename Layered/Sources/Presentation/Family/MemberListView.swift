@@ -2,11 +2,14 @@ import SwiftUI
 
 struct MemberListView: View {
     let onBack: () -> Void
-    private let members = MockData.members
-    private let family = MockData.family
+    @Environment(AppState.self) private var appState: AppState?
 
     @State private var showKickAlert = false
     @State private var memberToKick: Member?
+
+    private var members: [Member] { appState?.members ?? [] }
+    private var family: Family? { appState?.currentFamily }
+    private var currentUserId: String { appState?.currentUser?.id ?? "" }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -32,7 +35,11 @@ struct MemberListView: View {
         }
         .alert("구성원 강퇴", isPresented: $showKickAlert) {
             Button("취소", role: .cancel) {}
-            Button("강퇴", role: .destructive) {}
+            Button("강퇴", role: .destructive) {
+                if let memberId = memberToKick?.id, let appState {
+                    Task { try? await appState.removeMember(memberId) }
+                }
+            }
         } message: {
             Text("\(memberToKick?.name ?? "")님을 정말 강퇴하시겠습니까?")
         }
@@ -59,8 +66,7 @@ struct MemberListView: View {
 
             Spacer()
 
-            // 관리자만 강퇴 가능, 본인 제외
-            if member.role != .admin && family.adminId == MockData.currentUser.id {
+            if member.role != .admin && family?.adminId == currentUserId {
                 Button(action: {
                     memberToKick = member
                     showKickAlert = true

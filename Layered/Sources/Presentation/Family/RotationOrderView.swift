@@ -2,7 +2,8 @@ import SwiftUI
 
 struct RotationOrderView: View {
     let onBack: () -> Void
-    @State private var members = MockData.members
+    @Environment(AppState.self) private var appState: AppState?
+    @State private var members: [Member] = []
 
     var body: some View {
         VStack(spacing: 0) {
@@ -11,6 +12,7 @@ struct RotationOrderView: View {
                 trailingText: "저장",
                 trailingAction: {
                     Haptic.light()
+                    saveOrder()
                 }
             )
 
@@ -54,6 +56,18 @@ struct RotationOrderView: View {
             }
             .listStyle(.plain)
             .environment(\.editMode, .constant(.active))
+        }
+        .onAppear {
+            members = appState?.members ?? []
+        }
+    }
+
+    private func saveOrder() {
+        guard let appState else { return }
+        let orders = members.enumerated().map { (memberId: $0.element.id, order: $0.offset) }
+        Task {
+            try? await appState.updateRotationOrder(orders)
+            onBack()
         }
     }
 }
