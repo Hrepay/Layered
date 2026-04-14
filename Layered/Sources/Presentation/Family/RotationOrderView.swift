@@ -1,8 +1,15 @@
 import SwiftUI
 
 enum RotationMode: String, CaseIterable {
-    case auto = "자동"
-    case manual = "수동"
+    case auto
+    case manual
+
+    var title: String {
+        switch self {
+        case .auto: return "자동"
+        case .manual: return "수동"
+        }
+    }
 
     var icon: String {
         switch self {
@@ -62,7 +69,7 @@ struct RotationOrderView: View {
                                         .frame(width: 24)
 
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text(mode.rawValue)
+                                        Text(mode.title)
                                             .font(.subheadline)
                                             .fontWeight(.medium)
                                             .foregroundStyle(.primary)
@@ -108,6 +115,8 @@ struct RotationOrderView: View {
             await appState?.refreshMembers()
             members = appState?.members ?? []
             fixedPlannerIndex = appState?.currentFamily?.currentPlannerIndex ?? 0
+            let mode = appState?.currentFamily?.rotationMode ?? "auto"
+            selectedMode = RotationMode(rawValue: mode) ?? .auto
         }
     }
 
@@ -207,16 +216,24 @@ struct RotationOrderView: View {
     private func saveSettings() {
         guard let appState else { return }
         Task {
-            // 순서 저장 (자동 모드)
-            if selectedMode == .auto {
-                let orders = members.enumerated().map { (memberId: $0.element.id, order: $0.offset) }
-                try? await appState.updateRotationOrder(orders)
-            }
-            // TODO: Phase 3에서 rotationMode를 Family 문서에 저장
-            // 현재는 currentPlannerIndex만 업데이트
-            toast = ToastData(type: .success, message: "저장되었습니다")
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                onBack()
+            do {
+                // rotationMode 저장
+                try await appState.updateRotationMode(selectedMode.rawValue)
+
+                // 자동 모드: 순서 저장
+                if selectedMode == .auto {
+                    let orders = members.enumerated().map {
+                        (memberId: $0.element.id, order: $0.offset)
+                    }
+                    try await appState.updateRotationOrder(orders)
+                }
+
+                toast = ToastData(type: .success, message: "저장되었습니다")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    onBack()
+                }
+            } catch {
+                appState.errorMessage = error.localizedDescription
             }
         }
     }

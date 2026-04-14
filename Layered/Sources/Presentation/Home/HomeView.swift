@@ -118,6 +118,7 @@ struct HomeView: View {
                     if let appState {
                         Task {
                             _ = try? await appState.createRecord(meetingId: meeting.id, record: record)
+                            await appState.checkMyRecords()
                             toast = ToastData(type: .success, message: "기록이 저장되었습니다")
                         }
                     }
@@ -314,9 +315,8 @@ struct HomeView: View {
 
                 Button(action: {
                     Haptic.light()
-                    // TODO: 리마인드 푸시 알림 (Phase 3)
                 }) {
-                    Text("리마인드 보내기")
+                    Text("리마인드 보내기 (준비 중)")
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundStyle(.primary)
@@ -418,7 +418,7 @@ struct HomeView: View {
         family: Family(
             id: "family-001", name: "황씨네", inviteCode: "ABC123",
             inviteCodeExpiresAt: Date(), adminId: "user-002",
-            memberCount: 3, currentPlannerIndex: 1, rotationDay: 1, createdAt: Date()
+            memberCount: 3, currentPlannerIndex: 1, rotationDay: 1, rotationMode: "auto", createdAt: Date()
         ),
         members: MockData.members,
         meetings: [],

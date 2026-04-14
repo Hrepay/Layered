@@ -1,6 +1,7 @@
 import SwiftUI
 import UIKit
 import FirebaseAuth
+import FirebaseFirestore
 
 enum AuthState: Equatable {
     case splash
@@ -234,7 +235,8 @@ final class AppState {
 
             if meetingWeeks.contains(key) {
                 streak += 1
-                checkDate = calendar.date(byAdding: .weekOfYear, value: -1, to: checkDate)!
+                guard let newDate = calendar.date(byAdding: .weekOfYear, value: -1, to: checkDate) else { break }
+                checkDate = newDate
             } else {
                 break
             }
@@ -313,11 +315,6 @@ final class AppState {
         return try await pollRepository.getPoll(familyId: familyId, meetingId: meetingId, pollId: pollId)
     }
 
-    func closePoll(meetingId: String, pollId: String) async throws {
-        guard let familyId = currentFamily?.id else { throw AppStateError.noFamily }
-        try await pollRepository.closePoll(familyId: familyId, meetingId: meetingId, pollId: pollId)
-    }
-
     func deletePoll(meetingId: String, pollId: String) async throws {
         guard let familyId = currentFamily?.id else { throw AppStateError.noFamily }
         try await pollRepository.deletePoll(familyId: familyId, meetingId: meetingId, pollId: pollId)
@@ -371,10 +368,11 @@ final class AppState {
         guard let familyId = currentFamily?.id,
               let userId = currentUser?.id else { throw AppStateError.noFamily }
         try await memberRepository.removeMember(familyId: familyId, memberId: userId)
-        var updatedUser = currentUser!
-        updatedUser.familyId = nil
-        try await userRepository.updateUser(updatedUser)
-        currentUser = updatedUser
+        if var updatedUser = currentUser {
+            updatedUser.familyId = nil
+            try await userRepository.updateUser(updatedUser)
+            currentUser = updatedUser
+        }
         currentFamily = nil
         members = []
         meetings = []
@@ -384,10 +382,11 @@ final class AppState {
     func deleteFamily() async throws {
         guard let familyId = currentFamily?.id else { throw AppStateError.noFamily }
         try await familyRepository.deleteFamily(id: familyId)
-        var updatedUser = currentUser!
-        updatedUser.familyId = nil
-        try await userRepository.updateUser(updatedUser)
-        currentUser = updatedUser
+        if var updatedUser = currentUser {
+            updatedUser.familyId = nil
+            try await userRepository.updateUser(updatedUser)
+            currentUser = updatedUser
+        }
         currentFamily = nil
         members = []
         meetings = []
@@ -401,6 +400,14 @@ final class AppState {
         guard let familyId = currentFamily?.id else { throw AppStateError.noFamily }
         try await familyRepository.updateFamilyName(familyId: familyId, name: name)
         currentFamily?.name = name
+    }
+
+    @MainActor
+    func updateRotationMode(_ mode: String) async throws {
+        guard let familyId = currentFamily?.id else { throw AppStateError.noFamily }
+        let db = FirebaseFirestore.Firestore.firestore()
+        try await db.collection("families").document(familyId).updateData(["rotationMode": mode])
+        currentFamily?.rotationMode = mode
     }
 
     @MainActor

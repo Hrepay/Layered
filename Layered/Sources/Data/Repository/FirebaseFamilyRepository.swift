@@ -15,6 +15,7 @@ final class FirebaseFamilyRepository: FamilyRepositoryProtocol {
             "memberCount": 1,
             "currentPlannerIndex": 0,
             "rotationDay": 1,
+            "rotationMode": "auto",
             "createdAt": Timestamp(date: Date()),
         ]
 
@@ -46,6 +47,7 @@ final class FirebaseFamilyRepository: FamilyRepositoryProtocol {
             memberCount: 1,
             currentPlannerIndex: 0,
             rotationDay: 1,
+            rotationMode: "auto",
             createdAt: Date()
         )
     }
@@ -134,6 +136,7 @@ final class FirebaseFamilyRepository: FamilyRepositoryProtocol {
             memberCount: data["memberCount"] as? Int ?? 0,
             currentPlannerIndex: data["currentPlannerIndex"] as? Int ?? 0,
             rotationDay: data["rotationDay"] as? Int ?? 1,
+            rotationMode: data["rotationMode"] as? String ?? "auto",
             createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? Date()
         )
     }
