@@ -2,7 +2,9 @@ import SwiftUI
 
 struct ProfileEditView: View {
     let onBack: () -> Void
-    @State private var name = MockData.currentUser.name
+    @Environment(AppState.self) private var appState: AppState?
+
+    @State private var name = ""
     @State private var showImagePicker = false
 
     var body: some View {
@@ -13,7 +15,14 @@ struct ProfileEditView: View {
                 trailingText: "저장",
                 trailingAction: {
                     Haptic.medium()
-                    onBack()
+                    if let appState {
+                        Task {
+                            try? await appState.updateProfile(name: name, profileImageURL: appState.currentUser?.profileImageURL)
+                            onBack()
+                        }
+                    } else {
+                        onBack()
+                    }
                 },
                 trailingDisabled: name.isEmpty
             )
@@ -49,6 +58,9 @@ struct ProfileEditView: View {
             }
 
             Spacer()
+        }
+        .onAppear {
+            name = appState?.currentUser?.name ?? ""
         }
     }
 }

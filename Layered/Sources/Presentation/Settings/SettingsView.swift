@@ -1,12 +1,18 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @Environment(AppState.self) private var appState: AppState?
+
     @State private var showProfileEdit = false
     @State private var showMemberList = false
     @State private var showInvite = false
     @State private var showRotation = false
     @State private var showNotification = false
     @State private var showAccount = false
+    @State private var showFamilyManagement = false
+
+    private var userName: String { appState?.currentUser?.name ?? "사용자" }
+    private var familyName: String { appState?.currentFamily?.name ?? "" }
 
     var body: some View {
         NavigationStack {
@@ -15,13 +21,13 @@ struct SettingsView: View {
                 Section {
                     Button(action: { showProfileEdit = true }) {
                         HStack(spacing: 14) {
-                            AvatarView(name: MockData.currentUser.name, size: 50)
+                            AvatarView(name: userName, size: 50)
 
                             VStack(alignment: .leading, spacing: 3) {
-                                Text(MockData.currentUser.name)
+                                Text(userName)
                                     .font(.headline)
                                     .foregroundStyle(.primary)
-                                Text(MockData.family.name)
+                                Text(familyName)
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -48,6 +54,9 @@ struct SettingsView: View {
                     Button(action: { showRotation = true }) {
                         settingsRow(icon: "arrow.triangle.2.circlepath", title: "로테이션 순서")
                     }
+                    Button(action: { showFamilyManagement = true }) {
+                        settingsRow(icon: "house.fill", title: "가정 관리")
+                    }
                 }
 
                 // MARK: - 앱 설정
@@ -67,21 +76,30 @@ struct SettingsView: View {
             .navigationTitle("설정")
             .fullScreenCover(isPresented: $showProfileEdit) {
                 ProfileEditView(onBack: { showProfileEdit = false })
+                    .environment(appState)
             }
             .fullScreenCover(isPresented: $showMemberList) {
                 MemberListView(onBack: { showMemberList = false })
+                    .environment(appState)
             }
             .fullScreenCover(isPresented: $showInvite) {
                 InviteMemberView(onBack: { showInvite = false })
+                    .environment(appState)
             }
             .fullScreenCover(isPresented: $showRotation) {
                 RotationOrderView(onBack: { showRotation = false })
+                    .environment(appState)
             }
             .fullScreenCover(isPresented: $showNotification) {
                 NotificationSettingsView(onBack: { showNotification = false })
             }
             .fullScreenCover(isPresented: $showAccount) {
                 AccountView(onBack: { showAccount = false })
+                    .environment(appState)
+            }
+            .fullScreenCover(isPresented: $showFamilyManagement) {
+                FamilyManagementView(onBack: { showFamilyManagement = false })
+                    .environment(appState)
             }
         }
     }
