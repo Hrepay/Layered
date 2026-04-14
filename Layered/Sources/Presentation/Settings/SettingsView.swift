@@ -4,15 +4,13 @@ struct SettingsView: View {
     @Environment(AppState.self) private var appState: AppState?
 
     @State private var showProfileEdit = false
+    @State private var refreshId = UUID()
     @State private var showMemberList = false
     @State private var showInvite = false
     @State private var showRotation = false
     @State private var showNotification = false
     @State private var showAccount = false
     @State private var showFamilyManagement = false
-
-    private var userName: String { appState?.currentUser?.name ?? "사용자" }
-    private var familyName: String { appState?.currentFamily?.name ?? "" }
 
     var body: some View {
         NavigationStack {
@@ -21,13 +19,17 @@ struct SettingsView: View {
                 Section {
                     Button(action: { showProfileEdit = true }) {
                         HStack(spacing: 14) {
-                            AvatarView(name: userName, size: 50, imageURL: appState?.currentUser?.profileImageURL)
+                            AvatarView(
+                                name: appState?.currentUser?.name ?? "사용자",
+                                size: 50,
+                                imageURL: appState?.currentUser?.profileImageURL
+                            )
 
                             VStack(alignment: .leading, spacing: 3) {
-                                Text(userName)
+                                Text(appState?.currentUser?.name ?? "사용자")
                                     .font(.headline)
                                     .foregroundStyle(.primary)
-                                Text(familyName)
+                                Text(appState?.currentFamily?.name ?? "")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -74,9 +76,13 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("설정")
+            .id(refreshId)
             .fullScreenCover(isPresented: $showProfileEdit) {
-                ProfileEditView(onBack: { showProfileEdit = false })
-                    .environment(appState)
+                ProfileEditView(onBack: {
+                    showProfileEdit = false
+                    refreshId = UUID()
+                })
+                .environment(appState)
             }
             .fullScreenCover(isPresented: $showMemberList) {
                 MemberListView(onBack: { showMemberList = false })

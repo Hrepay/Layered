@@ -18,6 +18,8 @@ final class AppState {
     var members: [Member] = []
     var meetings: [Meeting] = []
     var myRecordedMeetingIds: Set<String> = []
+    var averageRating: Double = 0
+    var consecutiveWeeks: Int = 0
     var isLoading = false
     var errorMessage: String?
 
@@ -89,6 +91,30 @@ final class AppState {
         hasSeenOnboarding = true
         authState = .login
     }
+
+    // MARK: - 이메일 로그인 (디버그용)
+    #if DEBUG
+    func signInWithEmail(email: String, password: String) async {
+        isLoading = true
+        errorMessage = nil
+        do {
+            let result = try await Auth.auth().signIn(withEmail: email, password: password)
+            let uid = result.user.uid
+            let user = User(
+                id: uid,
+                name: result.user.displayName ?? email.components(separatedBy: "@").first ?? "테스터",
+                profileImageURL: nil,
+                familyId: nil,
+                createdAt: Date()
+            )
+            try await userRepository.createUserIfNeeded(user)
+            await loadUserData(uid: uid)
+        } catch {
+            errorMessage = error.localizedDescription
+            isLoading = false
+        }
+    }
+    #endif
 
     // MARK: - Apple 로그인
     func signInWithApple() async {
@@ -170,14 +196,51 @@ final class AppState {
         guard let familyId = currentFamily?.id,
               let userId = currentUser?.id else { return }
         var recordedIds = Set<String>()
+        var allRatings: [Int] = []
         for meeting in meetings {
             if let records = try? await recordRepository.getRecords(familyId: familyId, meetingId: meeting.id) {
                 if records.contains(where: { $0.memberId == userId }) {
                     recordedIds.insert(meeting.id)
                 }
+                allRatings.append(contentsOf: records.map(\.rating))
             }
         }
         myRecordedMeetingIds = recordedIds
+        averageRating = allRatings.isEmpty ? 0 : Double(allRatings.reduce(0, +)) / Double(allRatings.count)
+        consecutiveWeeks = calcConsecutiveWeeks()
+    }
+
+    private func calcConsecutiveWeeks() -> Int {
+        let calendar = Calendar.current
+        let now = Date()
+
+        // 모임 날짜에서 주 번호 추출 (과거 모임만)
+        let meetingWeeks = Set(
+            meetings
+                .filter { $0.meetingDate <= now && $0.status != .cancelled }
+                .map { calendar.component(.weekOfYear, from: $0.meetingDate) * 10000 + calendar.component(.yearForWeekOfYear, from: $0.meetingDate) }
+        )
+
+        guard !meetingWeeks.isEmpty else { return 0 }
+
+        // 현재 주부터 과거로 연속 체크
+        var streak = 0
+        var checkDate = now
+
+        while true {
+            let week = calendar.component(.weekOfYear, from: checkDate)
+            let year = calendar.component(.yearForWeekOfYear, from: checkDate)
+            let key = week * 10000 + year
+
+            if meetingWeeks.contains(key) {
+                streak += 1
+                checkDate = calendar.date(byAdding: .weekOfYear, value: -1, to: checkDate)!
+            } else {
+                break
+            }
+        }
+
+        return streak
     }
 
     @MainActor
@@ -332,6 +395,15 @@ final class AppState {
     }
 
     // MARK: - 프로필 수정
+    // MARK: - 가정 이름 변경
+    @MainActor
+    func updateFamilyName(_ name: String) async throws {
+        guard let familyId = currentFamily?.id else { throw AppStateError.noFamily }
+        try await familyRepository.updateFamilyName(familyId: familyId, name: name)
+        currentFamily?.name = name
+    }
+
+    @MainActor
     func updateProfile(name: String, profileImageURL: String?) async throws {
         guard var user = currentUser else { return }
         user.name = name

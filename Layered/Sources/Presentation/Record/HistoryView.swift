@@ -38,12 +38,16 @@ struct HistoryView: View {
                                 )
                                 statCard(
                                     icon: "star.fill",
-                                    value: "-",
+                                    value: (appState?.averageRating ?? 0) > 0
+                                        ? String(format: "%.1f", appState?.averageRating ?? 0)
+                                        : "-",
                                     label: "평균 별점"
                                 )
                                 statCard(
                                     icon: "flame.fill",
-                                    value: "-",
+                                    value: (appState?.consecutiveWeeks ?? 0) > 0
+                                        ? "\(appState?.consecutiveWeeks ?? 0)주"
+                                        : "-",
                                     label: "연속 달성"
                                 )
                             }
