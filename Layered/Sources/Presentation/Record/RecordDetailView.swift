@@ -3,13 +3,37 @@ import SwiftUI
 struct RecordDetailView: View {
     let meeting: Meeting
     let onBack: () -> Void
-    private let records = MockData.records
+    var onDeleted: (() -> Void)?
+
+    @Environment(AppState.self) private var appState: AppState?
+
+    @State private var records: [MeetingRecord] = []
+    @State private var showRecordDeleteAlert = false
+    @State private var showMeetingDeleteAlert = false
+    @State private var recordToDelete: MeetingRecord?
+    @State private var showCreateRecord = false
+
+    private var hasMyRecord: Bool {
+        guard let userId = appState?.currentUser?.id else { return false }
+        return records.contains { $0.memberId == userId }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
             NavBar(
                 title: "모임 기록",
-                backAction: onBack
+                backAction: onBack,
+                trailingMenu: AnyView(
+                    Menu {
+                        Button("모임 삭제", systemImage: "trash.fill", role: .destructive) {
+                            showMeetingDeleteAlert = true
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .font(.title3)
+                            .foregroundStyle(.primary)
+                    }
+                )
             )
 
             ScrollView {
@@ -34,66 +58,138 @@ struct RecordDetailView: View {
                     .card()
 
                     // MARK: - 구성원별 기록
-                    ForEach(records) { record in
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack(spacing: 10) {
-                                AvatarView(name: record.memberName, size: 36)
-
-                                Text(record.memberName)
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-
-                                Spacer()
-
-                                HStack(spacing: 2) {
-                                    ForEach(1...5, id: \.self) { star in
-                                        Image(systemName: star <= record.rating ? "star.fill" : "star")
-                                            .font(.caption2)
-                                            .foregroundStyle(star <= record.rating ? AppColors.warning : Color(.systemGray4))
-                                    }
-                                }
-
-                                // 본인 기록 수정/삭제
-                                if record.memberId == MockData.currentUser.id {
-                                    Menu {
-                                        Button("수정", systemImage: "pencil") {}
-                                        Button("삭제", systemImage: "trash.fill", role: .destructive) {}
-                                    } label: {
-                                        Image(systemName: "ellipsis")
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                            .frame(width: 28, height: 28)
-                                    }
-                                }
-                            }
-
-                            Text(record.comment)
+                    if records.isEmpty {
+                        VStack(spacing: 12) {
+                            Image(systemName: "camera.fill")
+                                .font(.system(size: 32))
+                                .foregroundStyle(Color(.systemGray4))
+                            Text("아직 기록이 없어요")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 32)
                         .card()
+                    } else {
+                        ForEach(records) { record in
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack(spacing: 10) {
+                                    AvatarView(name: record.memberName, size: 36)
+
+                                    Text(record.memberName)
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+
+                                    Spacer()
+
+                                    HStack(spacing: 2) {
+                                        ForEach(1...5, id: \.self) { star in
+                                            Image(systemName: star <= record.rating ? "star.fill" : "star")
+                                                .font(.caption2)
+                                                .foregroundStyle(star <= record.rating ? AppColors.warning : Color(.systemGray4))
+                                        }
+                                    }
+
+                                    if record.memberId == appState?.currentUser?.id {
+                                        Menu {
+                                            Button("삭제", systemImage: "trash.fill", role: .destructive) {
+                                                recordToDelete = record
+                                                showRecordDeleteAlert = true
+                                            }
+                                        } label: {
+                                            Image(systemName: "ellipsis")
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                                .frame(width: 28, height: 28)
+                                        }
+                                    }
+                                }
+
+                                Text(record.comment)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .card()
+                        }
                     }
 
-                    // MARK: - 미작성 구성원
-                    HStack(spacing: 10) {
-                        AvatarView(name: "아빠", size: 36)
-
-                        Text("아빠")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-
-                        Spacer()
-
-                        BadgeView(text: "미작성", color: Color(.systemGray4))
+                    // MARK: - 기록하기 버튼 (내 기록 없을 때)
+                    if !hasMyRecord {
+                        Button(action: {
+                            Haptic.medium()
+                            showCreateRecord = true
+                        }) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "plus.circle.fill")
+                                    .foregroundStyle(AppColors.primary)
+                                Text("나도 기록하기")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.primary)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(AppColors.primarySubtle)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                        }
                     }
-                    .card()
-                    .opacity(0.4)
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
                 .padding(.bottom, 40)
             }
+        }
+        .task {
+            await loadRecords()
+        }
+        .fullScreenCover(isPresented: $showCreateRecord) {
+            CreateRecordView(meeting: meeting, onBack: {
+                showCreateRecord = false
+            }, onSaved: { record in
+                showCreateRecord = false
+                if let appState {
+                    Task {
+                        _ = try? await appState.createRecord(meetingId: meeting.id, record: record)
+                        await loadRecords()
+                    }
+                }
+            })
+            .environment(appState)
+        }
+        .alert("기록 삭제", isPresented: $showRecordDeleteAlert) {
+            Button("취소", role: .cancel) {}
+            Button("삭제", role: .destructive) {
+                if let record = recordToDelete, let appState {
+                    Task {
+                        try? await appState.deleteRecord(meetingId: meeting.id, recordId: record.id)
+                        await loadRecords()
+                    }
+                }
+            }
+        } message: {
+            Text("이 기록을 삭제하시겠습니까?")
+        }
+        .alert("모임 삭제", isPresented: $showMeetingDeleteAlert) {
+            Button("취소", role: .cancel) {}
+            Button("삭제", role: .destructive) {
+                if let appState {
+                    Task {
+                        try? await appState.deleteMeeting(meeting.id)
+                        onDeleted?()
+                    }
+                }
+            }
+        } message: {
+            Text("정말 삭제하시겠습니까?\n관련 기록도 함께 삭제됩니다.")
+        }
+    }
+
+    private func loadRecords() async {
+        if let appState {
+            records = (try? await appState.getRecords(meetingId: meeting.id)) ?? []
+        } else {
+            records = []
         }
     }
 

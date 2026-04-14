@@ -1,8 +1,12 @@
 import SwiftUI
 
 struct HistoryView: View {
-    private let meetings = MockData.meetings
+    @Environment(AppState.self) private var appState: AppState?
     @State private var selectedMeeting: Meeting?
+    @State private var meetingToDelete: Meeting?
+    @State private var showDeleteAlert = false
+
+    private var meetings: [Meeting] { appState?.meetings ?? [] }
 
     var body: some View {
         NavigationStack {
@@ -34,12 +38,12 @@ struct HistoryView: View {
                                 )
                                 statCard(
                                     icon: "star.fill",
-                                    value: "4.5",
+                                    value: "-",
                                     label: "평균 별점"
                                 )
                                 statCard(
                                     icon: "flame.fill",
-                                    value: "3주",
+                                    value: "-",
                                     label: "연속 달성"
                                 )
                             }
@@ -75,8 +79,8 @@ struct HistoryView: View {
                                                 Spacer()
 
                                                 BadgeView(
-                                                    text: statusText(meeting.status),
-                                                    color: statusColor(meeting.status)
+                                                    text: displayStatus(for: meeting).text,
+                                                    color: displayStatus(for: meeting).color
                                                 )
                                             }
 
@@ -86,20 +90,49 @@ struct HistoryView: View {
                                                     .foregroundStyle(.secondary)
                                             }
 
-                                            HStack(spacing: 4) {
-                                                Image(systemName: "person.fill")
-                                                    .font(.caption2)
-                                                Text(meeting.plannerName)
-                                                    .font(.caption2)
+                                            HStack(spacing: 8) {
+                                                HStack(spacing: 4) {
+                                                    Image(systemName: "person.fill")
+                                                        .font(.caption2)
+                                                    Text(meeting.plannerName)
+                                                        .font(.caption2)
+                                                }
+                                                .foregroundStyle(.secondary)
+
+                                                Spacer()
+
+                                                if appState?.myRecordedMeetingIds.contains(meeting.id) == true {
+                                                    HStack(spacing: 3) {
+                                                        Image(systemName: "checkmark.circle.fill")
+                                                            .font(.caption2)
+                                                        Text("기록 완료")
+                                                            .font(.caption2)
+                                                    }
+                                                    .foregroundStyle(AppColors.secondary)
+                                                } else if meeting.meetingDate <= Date() {
+                                                    HStack(spacing: 3) {
+                                                        Image(systemName: "pencil.circle")
+                                                            .font(.caption2)
+                                                        Text("미기록")
+                                                            .font(.caption2)
+                                                    }
+                                                    .foregroundStyle(AppColors.warning)
+                                                }
                                             }
-                                            .foregroundStyle(.secondary)
                                         }
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .card()
-                                        .tappableCard()
                                     }
                                 }
                                 .buttonStyle(.plain)
+                                .swipeActions(edge: .trailing) {
+                                    Button(role: .destructive) {
+                                        meetingToDelete = meeting
+                                        showDeleteAlert = true
+                                    } label: {
+                                        Label("삭제", systemImage: "trash")
+                                    }
+                                }
                             }
                         }
                         .padding(.horizontal, 20)
@@ -109,7 +142,25 @@ struct HistoryView: View {
             }
             .navigationTitle("히스토리")
             .fullScreenCover(item: $selectedMeeting) { meeting in
-                RecordDetailView(meeting: meeting, onBack: { selectedMeeting = nil })
+                RecordDetailView(meeting: meeting, onBack: {
+                    selectedMeeting = nil
+                }, onDeleted: {
+                    selectedMeeting = nil
+                    Task { await appState?.refreshMeetings() }
+                })
+                .environment(appState)
+            }
+            .alert("모임 삭제", isPresented: $showDeleteAlert) {
+                Button("취소", role: .cancel) {}
+                Button("삭제", role: .destructive) {
+                    if let meeting = meetingToDelete, let appState {
+                        Task {
+                            try? await appState.deleteMeeting(meeting.id)
+                        }
+                    }
+                }
+            } message: {
+                Text("정말 삭제하시겠습니까?\n관련 기록도 함께 삭제됩니다.")
             }
         }
     }
@@ -152,21 +203,18 @@ struct HistoryView: View {
         return formatter.string(from: date)
     }
 
-    private func statusText(_ status: Meeting.Status) -> String {
-        switch status {
-        case .planning: return "계획 중"
-        case .confirmed: return "확정"
-        case .completed: return "완료"
-        case .cancelled: return "취소"
+    private func displayStatus(for meeting: Meeting) -> (text: String, color: Color) {
+        if meeting.status == .cancelled {
+            return ("취소", Color(.systemGray4))
         }
-    }
-
-    private func statusColor(_ status: Meeting.Status) -> Color {
-        switch status {
-        case .planning: return AppColors.info
-        case .confirmed: return AppColors.secondary
-        case .completed: return AppColors.primary
-        case .cancelled: return Color(.systemGray4)
+        if meeting.meetingDate <= Date() {
+            return ("완료", Color.gray)
+        }
+        switch meeting.status {
+        case .planning: return ("계획 중", AppColors.info)
+        case .confirmed: return ("확정", AppColors.secondary)
+        case .completed: return ("완료", Color.gray)
+        case .cancelled: return ("취소", Color(.systemGray4))
         }
     }
 }

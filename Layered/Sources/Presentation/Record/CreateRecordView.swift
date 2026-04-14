@@ -5,6 +5,8 @@ struct CreateRecordView: View {
     let onBack: () -> Void
     let onSaved: (MeetingRecord) -> Void
 
+    @Environment(AppState.self) private var appState: AppState?
+
     @State private var comment = ""
     @State private var rating = 0
     @State private var photos: [String] = []
@@ -18,7 +20,17 @@ struct CreateRecordView: View {
                 trailingText: "저장",
                 trailingAction: {
                     Haptic.medium()
-                    onSaved(MockData.records[0])
+                    let record = MeetingRecord(
+                        id: UUID().uuidString,
+                        memberId: appState?.currentUser?.id ?? "",
+                        memberName: appState?.currentUser?.name ?? "",
+                        photos: photos,
+                        comment: comment,
+                        rating: rating,
+                        createdAt: Date(),
+                        updatedAt: Date()
+                    )
+                    onSaved(record)
                 },
                 trailingDisabled: !isValid
             )
