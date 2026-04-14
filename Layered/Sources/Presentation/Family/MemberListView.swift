@@ -43,11 +43,14 @@ struct MemberListView: View {
         } message: {
             Text("\(memberToKick?.name ?? "")님을 정말 강퇴하시겠습니까?")
         }
+        .task {
+            await appState?.refreshMembers()
+        }
     }
 
     private func memberRow(_ member: Member) -> some View {
         HStack(spacing: 12) {
-            AvatarView(name: member.name, size: 44)
+            AvatarView(name: member.name, size: 44, imageURL: member.profileImageURL)
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {

@@ -6,6 +6,8 @@ struct FamilyManagementView: View {
 
     @State private var showLeaveAlert = false
     @State private var showDeleteAlert = false
+    @State private var showRenameAlert = false
+    @State private var newFamilyName = ""
 
     private var isAdmin: Bool {
         guard let appState else { return false }
@@ -20,6 +22,30 @@ struct FamilyManagementView: View {
             )
 
             VStack(spacing: 0) {
+                // 가정 이름 변경
+                Button(action: {
+                    newFamilyName = appState?.currentFamily?.name ?? ""
+                    showRenameAlert = true
+                }) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "pencil.line")
+                            .foregroundStyle(AppColors.primary)
+
+                        Text("가정 이름 변경")
+                            .foregroundStyle(.primary)
+
+                        Spacer()
+
+                        Text(appState?.currentFamily?.name ?? "")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(16)
+                }
+
+                Divider()
+                    .padding(.leading, 44)
+
                 // 나가기 버튼
                 Button(action: {
                     showLeaveAlert = true
@@ -63,6 +89,16 @@ struct FamilyManagementView: View {
             .padding(.top, 24)
 
             Spacer()
+        }
+        .alert("가정 이름 변경", isPresented: $showRenameAlert) {
+            TextField("가정 이름", text: $newFamilyName)
+            Button("취소", role: .cancel) {}
+            Button("변경") {
+                guard !newFamilyName.isEmpty else { return }
+                Task { try? await appState?.updateFamilyName(newFamilyName) }
+            }
+        } message: {
+            Text("새로운 가정 이름을 입력해주세요.")
         }
         .alert("가정 나가기", isPresented: $showLeaveAlert) {
             Button("취소", role: .cancel) {}
