@@ -12,6 +12,7 @@ struct RecordDetailView: View {
     @State private var showMeetingDeleteAlert = false
     @State private var recordToDelete: MeetingRecord?
     @State private var showCreateRecord = false
+    @State private var fullScreenImageURL: String?
 
     private var hasMyRecord: Bool {
         guard let userId = appState?.currentUser?.id else { return false }
@@ -105,6 +106,23 @@ struct RecordDetailView: View {
                                     }
                                 }
 
+                                // 사진
+                                if !record.photos.isEmpty {
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        HStack(spacing: 8) {
+                                            ForEach(record.photos, id: \.self) { url in
+                                                Button {
+                                                    fullScreenImageURL = url
+                                                } label: {
+                                                    CachedAsyncImage(url: URL(string: url))
+                                                        .frame(width: 100, height: 100)
+                                                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
                                 Text(record.comment)
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
@@ -182,6 +200,12 @@ struct RecordDetailView: View {
             }
         } message: {
             Text("정말 삭제하시겠습니까?\n관련 기록도 함께 삭제됩니다.")
+        }
+        .fullScreenCover(item: Binding(
+            get: { fullScreenImageURL.map { FullScreenImageItem(url: $0) } },
+            set: { fullScreenImageURL = $0?.url }
+        )) { item in
+            FullScreenImageView(url: item.url, onDismiss: { fullScreenImageURL = nil })
         }
     }
 
