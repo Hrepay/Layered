@@ -2,6 +2,7 @@ import SwiftUI
 
 struct LoginView: View {
     let onSignIn: () -> Void
+    var onDebugSignIn: ((String, String) -> Void)?
 
     @State private var appeared = false
 
@@ -53,6 +54,25 @@ struct LoginView: View {
                     .background(.black)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
+
+                #if DEBUG
+                Button(action: {
+                    Haptic.light()
+                    onDebugSignIn?("dbrdldh11@naver.com", "dbrdldh11")
+                }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "envelope.fill")
+                            .font(.title3)
+                        Text("테스트 계정 로그인")
+                            .font(.headline)
+                    }
+                    .foregroundStyle(.primary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(Color(.secondarySystemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                }
+                #endif
 
                 // 약관 안내
                 Text("로그인 시 이용약관 및 개인정보 처리방침에 동의합니다")

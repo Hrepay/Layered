@@ -17,6 +17,10 @@ struct RootView: View {
                     Task {
                         await appState.signInWithApple()
                     }
+                }, onDebugSignIn: { email, password in
+                    Task {
+                        await appState.signInWithEmail(email: email, password: password)
+                    }
                 })
             case .familySetup:
                 FamilySetupView(onJoined: { family in
