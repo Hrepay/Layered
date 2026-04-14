@@ -1,8 +1,19 @@
 import SwiftUI
 
 struct PollResultView: View {
-    let poll: Poll
+    let initialPoll: Poll
     let onBack: () -> Void
+    var meetingId: String = ""
+
+    @Environment(AppState.self) private var appState: AppState?
+    @State private var poll: Poll
+
+    init(poll: Poll, onBack: @escaping () -> Void, meetingId: String = "") {
+        self.initialPoll = poll
+        self.onBack = onBack
+        self.meetingId = meetingId
+        _poll = State(initialValue: poll)
+    }
 
     private var totalVotes: Int {
         poll.options.reduce(0) { $0 + $1.voteCount }
@@ -77,7 +88,7 @@ struct PollResultView: View {
 
                             // 공개 투표: 투표자 표시
                             if !poll.isAnonymous && !option.voterIds.isEmpty {
-                                Text(option.voterIds.joined(separator: ", "))
+                                Text(voterNames(for: option.voterIds))
                                     .font(.caption2)
                                     .foregroundStyle(.secondary)
                             }
@@ -90,6 +101,19 @@ struct PollResultView: View {
                 .padding(.bottom, 40)
             }
         }
+        .task {
+            guard let appState, !meetingId.isEmpty else { return }
+            if let updated = try? await appState.getPoll(meetingId: meetingId, pollId: poll.id) {
+                poll = updated
+            }
+        }
+    }
+
+    private func voterNames(for ids: [String]) -> String {
+        let members = appState?.members ?? []
+        return ids.map { id in
+            members.first(where: { $0.id == id })?.name ?? id
+        }.joined(separator: ", ")
     }
 }
 

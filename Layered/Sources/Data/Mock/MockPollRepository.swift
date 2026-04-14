@@ -5,6 +5,10 @@ final class MockPollRepository: PollRepositoryProtocol {
         poll
     }
 
+    func getPolls(familyId: String, meetingId: String) async throws -> [Poll] {
+        [MockData.poll]
+    }
+
     func getPoll(familyId: String, meetingId: String, pollId: String) async throws -> Poll {
         MockData.poll
     }

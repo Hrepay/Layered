@@ -52,6 +52,13 @@ final class FirebasePollRepository: PollRepositoryProtocol {
         )
     }
 
+    func getPolls(familyId: String, meetingId: String) async throws -> [Poll] {
+        let snapshot = try await pollsRef(familyId: familyId, meetingId: meetingId).getDocuments()
+        return snapshot.documents.map { doc in
+            pollFromData(id: doc.documentID, data: doc.data())
+        }
+    }
+
     func getPoll(familyId: String, meetingId: String, pollId: String) async throws -> Poll {
         let doc = try await pollsRef(familyId: familyId, meetingId: meetingId).document(pollId).getDocument()
         guard let data = doc.data() else {

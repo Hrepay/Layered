@@ -17,7 +17,28 @@ struct CreatePollView: View {
                 trailingText: "만들기",
                 trailingAction: {
                     Haptic.medium()
-                    onCreated(MockData.poll)
+                    let pollOptions = options.enumerated().compactMap { index, title -> PollOption? in
+                        guard !title.isEmpty else { return nil }
+                        return PollOption(
+                            id: UUID().uuidString,
+                            title: title,
+                            description: nil,
+                            imageURL: nil,
+                            voterIds: [],
+                            voteCount: 0
+                        )
+                    }
+                    let poll = Poll(
+                        id: UUID().uuidString,
+                        question: question,
+                        isAnonymous: isAnonymous,
+                        allowMultiple: true,
+                        deadline: deadline,
+                        status: .open,
+                        options: pollOptions,
+                        createdAt: Date()
+                    )
+                    onCreated(poll)
                 },
                 trailingDisabled: !isValid
             )
