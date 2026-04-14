@@ -9,8 +9,10 @@ struct CreateRecordView: View {
 
     @State private var comment = ""
     @State private var rating = 0
-    @State private var photos: [String] = []
+    @State private var selectedImages: [UIImage] = []
     @State private var animatedStar: Int? = nil
+    @State private var showImagePicker = false
+    @State private var isUploading = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -20,19 +22,43 @@ struct CreateRecordView: View {
                 trailingText: "저장",
                 trailingAction: {
                     Haptic.medium()
-                    let record = MeetingRecord(
-                        id: UUID().uuidString,
-                        memberId: appState?.currentUser?.id ?? "",
-                        memberName: appState?.currentUser?.name ?? "",
-                        photos: photos,
-                        comment: comment,
-                        rating: rating,
-                        createdAt: Date(),
-                        updatedAt: Date()
-                    )
-                    onSaved(record)
+                    isUploading = true
+                    let recordId = UUID().uuidString
+                    Task {
+                        do {
+                            var photoURLs: [String] = []
+                            if let appState, let familyId = appState.currentFamily?.id {
+                                for (index, image) in selectedImages.enumerated() {
+                                    guard let data = FirebaseStorageRepository.resizeAndCompress(image) else { continue }
+                                    let url = try await appState.storageRepository.uploadRecordPhoto(
+                                        familyId: familyId,
+                                        meetingId: meeting.id,
+                                        recordId: recordId,
+                                        index: index,
+                                        imageData: data
+                                    )
+                                    photoURLs.append(url)
+                                }
+                            }
+                            let record = MeetingRecord(
+                                id: recordId,
+                                memberId: appState?.currentUser?.id ?? "",
+                                memberName: appState?.currentUser?.name ?? "",
+                                photos: photoURLs,
+                                comment: comment,
+                                rating: rating,
+                                createdAt: Date(),
+                                updatedAt: Date()
+                            )
+                            isUploading = false
+                            onSaved(record)
+                        } catch {
+                            isUploading = false
+                            appState?.errorMessage = error.localizedDescription
+                        }
+                    }
                 },
-                trailingDisabled: !isValid
+                trailingDisabled: !isValid || isUploading
             )
 
             ScrollView {
@@ -65,20 +91,29 @@ struct CreateRecordView: View {
 
                         HStack(spacing: 12) {
                             ForEach(0..<3, id: \.self) { index in
-                                if index < photos.count {
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .fill(AppColors.primarySubtle)
-                                        .aspectRatio(1, contentMode: .fit)
-                                        .overlay {
-                                            Image(systemName: "photo.fill")
-                                                .foregroundStyle(AppColors.primary)
+                                if index < selectedImages.count {
+                                    ZStack(alignment: .topTrailing) {
+                                        Image(uiImage: selectedImages[index])
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(maxWidth: .infinity)
+                                            .aspectRatio(1, contentMode: .fit)
+                                            .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                                        Button {
+                                            selectedImages.remove(at: index)
+                                        } label: {
+                                            Image(systemName: "xmark.circle.fill")
+                                                .font(.body)
+                                                .foregroundStyle(.white)
+                                                .background(Circle().fill(.black.opacity(0.5)))
                                         }
-                                } else if index == photos.count {
+                                        .padding(4)
+                                    }
+                                } else if index == selectedImages.count && selectedImages.count < 3 {
                                     Button {
                                         Haptic.light()
-                                        if photos.count < 3 {
-                                            photos.append("photo-\(index)")
-                                        }
+                                        showImagePicker = true
                                     } label: {
                                         RoundedRectangle(cornerRadius: 12)
                                             .strokeBorder(
@@ -164,6 +199,15 @@ struct CreateRecordView: View {
                 .padding(.top, 8)
                 .padding(.bottom, 40)
             }
+        }
+        .loadingOverlay(isUploading)
+        .sheet(isPresented: $showImagePicker) {
+            MultiImagePicker(maxSelection: 3 - selectedImages.count, selectedImages: Binding(
+                get: { [] },
+                set: { newImages in
+                    selectedImages.append(contentsOf: newImages.prefix(3 - selectedImages.count))
+                }
+            ))
         }
     }
 

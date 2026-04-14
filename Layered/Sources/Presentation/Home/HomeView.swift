@@ -134,7 +134,7 @@ struct HomeView: View {
     // MARK: - 플래너 섹션
     private var plannerSection: some View {
         HStack(spacing: 12) {
-            AvatarView(name: currentPlanner?.name ?? "?")
+            AvatarView(name: currentPlanner?.name ?? "?", imageURL: currentPlanner?.profileImageURL)
 
             VStack(alignment: .leading, spacing: 2) {
                 if isPlanner {

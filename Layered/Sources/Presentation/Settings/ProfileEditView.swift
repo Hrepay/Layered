@@ -6,6 +6,8 @@ struct ProfileEditView: View {
 
     @State private var name = ""
     @State private var showImagePicker = false
+    @State private var selectedImage: UIImage?
+    @State private var isUploading = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -15,23 +17,42 @@ struct ProfileEditView: View {
                 trailingText: "저장",
                 trailingAction: {
                     Haptic.medium()
-                    if let appState {
-                        Task {
-                            try? await appState.updateProfile(name: name, profileImageURL: appState.currentUser?.profileImageURL)
+                    guard let appState else { onBack(); return }
+                    isUploading = true
+                    Task {
+                        do {
+                            if let image = selectedImage {
+                                try await appState.uploadProfileImage(image)
+                            }
+                            try await appState.updateProfile(name: name, profileImageURL: appState.currentUser?.profileImageURL)
+                            isUploading = false
                             onBack()
+                        } catch {
+                            isUploading = false
+                            appState.errorMessage = error.localizedDescription
                         }
-                    } else {
-                        onBack()
                     }
                 },
-                trailingDisabled: name.isEmpty
+                trailingDisabled: name.isEmpty || isUploading
             )
 
             VStack(spacing: 28) {
                 // MARK: - Avatar with camera overlay
                 Button(action: { showImagePicker = true }) {
                     ZStack(alignment: .bottomTrailing) {
-                        AvatarView(name: name.isEmpty ? " " : name, size: 100)
+                        if let image = selectedImage {
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 100, height: 100)
+                                .clipShape(Circle())
+                        } else {
+                            AvatarView(
+                                name: name.isEmpty ? " " : name,
+                                size: 100,
+                                imageURL: appState?.currentUser?.profileImageURL
+                            )
+                        }
 
                         Circle()
                             .fill(AppColors.primary)
@@ -59,8 +80,12 @@ struct ProfileEditView: View {
 
             Spacer()
         }
+        .loadingOverlay(isUploading)
         .onAppear {
             name = appState?.currentUser?.name ?? ""
+        }
+        .sheet(isPresented: $showImagePicker) {
+            ImagePicker(selectedImage: $selectedImage)
         }
     }
 }

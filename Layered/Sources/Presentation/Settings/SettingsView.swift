@@ -21,7 +21,7 @@ struct SettingsView: View {
                 Section {
                     Button(action: { showProfileEdit = true }) {
                         HStack(spacing: 14) {
-                            AvatarView(name: userName, size: 50)
+                            AvatarView(name: userName, size: 50, imageURL: appState?.currentUser?.profileImageURL)
 
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(userName)

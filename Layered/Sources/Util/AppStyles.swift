@@ -103,6 +103,16 @@ struct AvatarView: View {
     }
 
     var body: some View {
+        if let imageURL, let url = URL(string: imageURL) {
+            CachedAsyncImage(url: url)
+                .frame(width: size, height: size)
+                .clipShape(Circle())
+        } else {
+            initialView
+        }
+    }
+
+    private var initialView: some View {
         Circle()
             .fill(AppColors.primarySubtle)
             .frame(width: size, height: size)
