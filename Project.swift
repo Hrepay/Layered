@@ -21,6 +21,7 @@ let project = Project(
                         "UIColorName": "",
                         "UIImageName": "",
                     ],
+                    "NSPhotoLibraryAddUsageDescription": "모임 사진을 기기에 저장하기 위해 사진첩 접근이 필요합니다.",
                 ]
             ),
             sources: [

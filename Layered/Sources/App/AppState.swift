@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import FirebaseAuth
 
 enum AuthState: Equatable {
@@ -28,6 +29,7 @@ final class AppState {
     nonisolated(unsafe) private var _meetingRepository: MeetingRepositoryProtocol?
     nonisolated(unsafe) private var _pollRepository: PollRepositoryProtocol?
     nonisolated(unsafe) private var _recordRepository: RecordRepositoryProtocol?
+    nonisolated(unsafe) private var _storageRepository: StorageRepositoryProtocol?
 
     private var authRepository: AuthRepositoryProtocol {
         if _authRepository == nil { _authRepository = FirebaseAuthRepository() }
@@ -56,6 +58,10 @@ final class AppState {
     var recordRepository: RecordRepositoryProtocol {
         if _recordRepository == nil { _recordRepository = FirebaseRecordRepository() }
         return _recordRepository!
+    }
+    var storageRepository: StorageRepositoryProtocol {
+        if _storageRepository == nil { _storageRepository = FirebaseStorageRepository() }
+        return _storageRepository!
     }
 
     private var hasSeenOnboarding: Bool {
@@ -330,6 +336,16 @@ final class AppState {
         guard var user = currentUser else { return }
         user.name = name
         user.profileImageURL = profileImageURL
+        try await userRepository.updateUser(user)
+        currentUser = user
+    }
+
+    // MARK: - 프로필 사진 업로드
+    func uploadProfileImage(_ image: UIImage) async throws {
+        guard var user = currentUser else { return }
+        guard let data = FirebaseStorageRepository.resizeAndCompress(image, maxSize: 256, quality: 0.5) else { return }
+        let url = try await storageRepository.uploadProfileImage(userId: user.id, imageData: data)
+        user.profileImageURL = url
         try await userRepository.updateUser(user)
         currentUser = user
     }
