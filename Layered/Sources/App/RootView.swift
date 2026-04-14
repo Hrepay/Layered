@@ -22,8 +22,10 @@ struct RootView: View {
                 FamilySetupView(onJoined: { family in
                     appState.joinedFamily(family)
                 })
+                .environment(appState)
             case .home:
                 MainTabView()
+                    .environment(appState)
             }
         }
         .animation(.easeInOut(duration: 0.3), value: appState.authState)
