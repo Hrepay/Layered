@@ -1,4 +1,5 @@
 import SwiftUI
+import LinkPresentation
 
 struct HomeView: View {
     var family: Family
@@ -14,6 +15,7 @@ struct HomeView: View {
     @State private var showInvite = false
     @State private var toast: ToastData?
     @State private var dismissedRecordCard = false
+    @State private var meetingLinkMetadata: LPLinkMetadata?
 
     private var currentPlanner: Member? {
         guard !members.isEmpty,
@@ -43,6 +45,17 @@ struct HomeView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\(family.name) 가족")
+                            .font(.title2)
+                            .bold()
+                        Text("우리 가족의 소중한 겹겹의 기록")
+                            .font(.subheadline)
+                            .foregroundStyle(.primary.opacity(0.5))
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 12)
+
                     if members.count <= 1 {
                         invitePromptCard
                     }
@@ -50,6 +63,8 @@ struct HomeView: View {
                     plannerSection
 
                     if let meeting = upcomingMeeting {
+                        dDayCard(meeting)
+
                         Button {
                             Haptic.light()
                             showMeetingDetail = meeting
@@ -74,11 +89,20 @@ struct HomeView: View {
                     }
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 12)
                 .padding(.bottom, 24)
             }
             .toast($toast)
-            .navigationTitle(family.name)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
+            .task(id: upcomingMeeting?.id) {
+                meetingLinkMetadata = nil
+                if let urlString = upcomingMeeting?.placeURL, let url = URL(string: urlString) {
+                    let provider = LPMetadataProvider()
+                    if let metadata = try? await provider.startFetchingMetadata(for: url) {
+                        meetingLinkMetadata = metadata
+                    }
+                }
+            }
             .fullScreenCover(item: $showMeetingDetail) { meeting in
                 MeetingDetailView(meeting: meeting, onBack: {
                     showMeetingDetail = nil
@@ -134,19 +158,21 @@ struct HomeView: View {
 
     // MARK: - 플래너 섹션
     private var plannerSection: some View {
-        HStack(spacing: 12) {
-            AvatarView(name: currentPlanner?.name ?? "?", imageURL: currentPlanner?.profileImageURL)
+        HStack(spacing: 14) {
+            AvatarView(name: currentPlanner?.name ?? "?", size: 52, imageURL: currentPlanner?.profileImageURL)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("THIS WEEK'S PLANNER")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
+
                 if isPlanner {
                     Text("이번 주 플래너는 나!")
                         .font(.headline)
                         .foregroundStyle(.primary)
                 } else {
-                    Text("이번 주 플래너")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text("\(currentPlanner?.name ?? "미정")님")
+                    Text("이번 주 플래너는 \(currentPlanner?.name ?? "미정")!")
                         .font(.headline)
                         .foregroundStyle(.primary)
                 }
@@ -154,48 +180,187 @@ struct HomeView: View {
 
             Spacer()
         }
-        .card(highlighted: isPlanner)
+        .card(highlighted: true)
+    }
+
+    // MARK: - D-Day 카드
+    private func dDayCard(_ meeting: Meeting) -> some View {
+        VStack(spacing: 8) {
+            Text(dDayText(for: meeting.meetingDate))
+                .font(.system(size: 40, weight: .bold))
+                .foregroundStyle(.primary)
+
+            Text("다음 모임까지")
+                .font(.subheadline)
+                .foregroundStyle(.primary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 28)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(AppColors.primaryLight)
+                .shadow(color: .black.opacity(0.06), radius: 12, y: 4)
+        )
     }
 
     // MARK: - 모임 카드
     private func meetingCard(_ meeting: Meeting) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                BadgeView(
-                    text: meeting.status == .confirmed ? "확정" : "계획중",
-                    color: meeting.status == .confirmed ? AppColors.secondary : AppColors.warning
-                )
+        VStack(alignment: .leading, spacing: 0) {
+            // 링크 미리보기 이미지 (패딩 밖, 카드 상단에 꽉 차게)
+            if meetingLinkMetadata != nil || meeting.placeURL != nil {
+                ZStack(alignment: .topLeading) {
+                    if let metadata = meetingLinkMetadata {
+                        LinkPreviewCard(metadata: metadata)
+                            .frame(height: 200)
+                            .frame(maxWidth: .infinity)
+                            .clipped()
+                            .allowsHitTesting(false)
+                    }
 
-                if meeting.hasPoll {
-                    BadgeView(text: "투표", color: AppColors.info)
+                    // 상태 뱃지 (이미지 위에 오버레이)
+                    HStack(spacing: 6) {
+                        BadgeView(
+                            text: meeting.status == .confirmed ? "확정" : "예정됨",
+                            color: meeting.status == .confirmed ? AppColors.secondary : AppColors.warning
+                        )
+                        if meeting.hasPoll {
+                            BadgeView(text: "투표", color: AppColors.info)
+                        }
+                    }
+                    .padding(12)
+                }
+            }
+
+            // 하단 콘텐츠 (패딩 적용)
+            VStack(alignment: .leading, spacing: 0) {
+                // 이미지 없을 때 뱃지
+                if meetingLinkMetadata == nil && meeting.placeURL == nil {
+                    HStack {
+                        BadgeView(
+                            text: meeting.status == .confirmed ? "확정" : "예정됨",
+                            color: meeting.status == .confirmed ? AppColors.secondary : AppColors.warning
+                        )
+                        if meeting.hasPoll {
+                            BadgeView(text: "투표", color: AppColors.info)
+                        }
+                        Spacer()
+                    }
+                    .padding(.bottom, 14)
+                } else {
+                    Spacer().frame(height: 14)
                 }
 
-                Spacer()
-
-                Text(dDayText(for: meeting.meetingDate))
+                // 날짜
+                Text(formatDate(meeting.meetingDate))
                     .font(.subheadline)
                     .fontWeight(.bold)
-                    .foregroundStyle(.primary)
-            }
+                    .foregroundStyle(Color(hex: "6B3A2A"))
+                    .padding(.bottom, 6)
 
-            VStack(alignment: .leading, spacing: 10) {
-                infoRow(icon: "calendar", text: formatDate(meeting.meetingDate))
-                infoRow(icon: "mappin.circle.fill", text: meeting.place)
+                // 장소 + 활동 아이콘들
+                HStack(alignment: .top) {
+                    Text(meeting.place)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.primary)
+
+                    Spacer()
+
+                    if let activity = meeting.activity {
+                        HStack(spacing: 6) {
+                            ForEach(activityIcons(for: activity), id: \.self) { iconName in
+                                Image(systemName: iconName)
+                                    .font(.title3)
+                                    .foregroundStyle(AppColors.primary)
+                            }
+                        }
+                    }
+                }
+                .padding(.bottom, 16)
+
+                // 활동 내용
                 if let activity = meeting.activity {
-                    infoRow(icon: "figure.walk", text: activity)
+                    HStack(spacing: 10) {
+                        Image(systemName: "calendar")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .frame(width: 20)
+                        Text(activity)
+                            .font(.subheadline)
+                            .foregroundStyle(.primary)
+                    }
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(.tertiarySystemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .padding(.bottom, 16)
+                }
+
+                // 하단: 멤버 아바타 + 상세 정보
+                HStack {
+                    HStack(spacing: -8) {
+                        ForEach(members.prefix(4)) { member in
+                            AvatarView(name: member.name, size: 32, imageURL: member.profileImageURL)
+                                .overlay(Circle().stroke(.white, lineWidth: 2))
+                        }
+                        if members.count > 4 {
+                            Text("+\(members.count - 4)")
+                                .font(.caption2)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.secondary)
+                                .frame(width: 32, height: 32)
+                                .background(Color(.tertiarySystemFill))
+                                .clipShape(Circle())
+                                .overlay(Circle().stroke(.white, lineWidth: 2))
+                        }
+                    }
+
+                    Spacer()
+
+                    HStack(spacing: 4) {
+                        Text("상세 정보")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                    }
+                    .foregroundStyle(.primary)
                 }
             }
+            .padding(.horizontal, 16)
+            .padding(.top, meetingLinkMetadata == nil && meeting.placeURL == nil ? 16 : 0)
+            .padding(.bottom, 16)
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color(.systemGray6))
+                .shadow(color: .black.opacity(0.06), radius: 12, y: 4)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+    }
 
-            HStack(spacing: 6) {
-                Image(systemName: "person.fill")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Text("플래너: \(meeting.plannerName)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+    // 활동 문자열에서 매칭되는 아이콘들 모두 반환
+    private func activityIcons(for activity: String) -> [String] {
+        let iconMap: [(String, String)] = [
+            ("외식", "fork.knife"),
+            ("카페", "cup.and.saucer.fill"),
+            ("영화", "film.fill"),
+            ("산책", "figure.walk"),
+            ("운동", "figure.run"),
+            ("피크닉", "leaf.fill"),
+            ("쇼핑", "cart.fill"),
+            ("집에서", "house.fill"),
+            ("게임", "gamecontroller.fill"),
+            ("문화생활", "book.fill"),
+        ]
+        var icons: [String] = []
+        for (keyword, icon) in iconMap {
+            if activity.contains(keyword) {
+                icons.append(icon)
             }
         }
-        .card()
+        return icons.isEmpty ? ["figure.walk"] : icons
     }
 
     // MARK: - 모임 기록 유도 카드
@@ -312,19 +477,6 @@ struct HomeView: View {
                 Text("플래너가 모임을 준비 중이에요")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-
-                Button(action: {
-                    Haptic.light()
-                }) {
-                    Text("리마인드 보내기 (준비 중)")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.primary)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 10)
-                        .background(AppColors.warningSubtle)
-                        .clipShape(Capsule())
-                }
             }
         }
         .frame(maxWidth: .infinity)
