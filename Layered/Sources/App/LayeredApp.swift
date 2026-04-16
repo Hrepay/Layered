@@ -75,6 +75,7 @@ struct LayeredApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .tint(AppColors.primary)
         }
     }
 }
