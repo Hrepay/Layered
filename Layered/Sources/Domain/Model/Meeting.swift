@@ -8,6 +8,7 @@ struct Meeting: Identifiable, Codable, Hashable {
     var place: String
     var placeLatitude: Double?
     var placeLongitude: Double?
+    var placeURL: String?
     var activity: String?
     var status: Status
     var hasPoll: Bool
