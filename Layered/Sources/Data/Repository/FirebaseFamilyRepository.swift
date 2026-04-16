@@ -25,11 +25,13 @@ final class FirebaseFamilyRepository: FamilyRepositoryProtocol {
         // 생성자를 첫 번째 멤버로 추가
         let usersRef = db.collection("users")
         let userDoc = try await usersRef.document(adminId).getDocument()
-        let userName = userDoc.data()?["name"] as? String ?? "사용자"
+        let userData = userDoc.data()
+        let userName = userData?["name"] as? String ?? "사용자"
+        let userImageURL = userData?["profileImageURL"] as? String
 
         try await docRef.collection("members").document(adminId).setData([
             "name": userName,
-            "profileImageURL": NSNull(),
+            "profileImageURL": userImageURL as Any,
             "role": "admin",
             "rotationOrder": 0,
             "joinedAt": Timestamp(date: Date()),
@@ -105,10 +107,14 @@ final class FirebaseFamilyRepository: FamilyRepositoryProtocol {
         let doc = try await familiesRef.document(familyId).getDocument()
         let memberCount = doc.data()?["memberCount"] as? Int ?? 0
 
+        // users에서 프로필 이미지 가져오기
+        let userDoc = try await db.collection("users").document(userId).getDocument()
+        let userImageURL = userDoc.data()?["profileImageURL"] as? String
+
         // 멤버 추가
         try await familiesRef.document(familyId).collection("members").document(userId).setData([
             "name": userName,
-            "profileImageURL": NSNull(),
+            "profileImageURL": userImageURL as Any,
             "role": "member",
             "rotationOrder": memberCount,
             "joinedAt": Timestamp(date: Date()),

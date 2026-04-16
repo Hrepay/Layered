@@ -181,11 +181,8 @@ final class AppState {
     func loadHomeData() async {
         guard let familyId = currentFamily?.id else { return }
         do {
-            async let membersTask = memberRepository.getMembers(familyId: familyId)
-            async let meetingsTask = meetingRepository.getMeetings(familyId: familyId)
-            let (loadedMembers, loadedMeetings) = try await (membersTask, meetingsTask)
-            members = loadedMembers
-            meetings = loadedMeetings
+            meetings = try await meetingRepository.getMeetings(familyId: familyId)
+            await refreshMembers()
             await checkMyRecords()
         } catch {
             errorMessage = error.localizedDescription
@@ -259,7 +256,25 @@ final class AppState {
     func refreshMembers() async {
         guard let familyId = currentFamily?.id else { return }
         do {
-            members = try await memberRepository.getMembers(familyId: familyId)
+            var loadedMembers = try await memberRepository.getMembers(familyId: familyId)
+
+            // members 서브컬렉션의 profileImageURL이 누락된 경우 users에서 동기화
+            let db = FirebaseFirestore.Firestore.firestore()
+            for i in loadedMembers.indices {
+                if loadedMembers[i].profileImageURL == nil {
+                    let userDoc = try? await db.collection("users").document(loadedMembers[i].id).getDocument()
+                    if let userData = userDoc?.data(),
+                       let imageURL = userData["profileImageURL"] as? String {
+                        loadedMembers[i].profileImageURL = imageURL
+                        // Firestore members에도 반영
+                        try? await db.collection("families").document(familyId)
+                            .collection("members").document(loadedMembers[i].id)
+                            .updateData(["profileImageURL": imageURL])
+                    }
+                }
+            }
+
+            members = loadedMembers
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -411,12 +426,32 @@ final class AppState {
     }
 
     @MainActor
+    func updateCurrentPlannerIndex(_ index: Int) async throws {
+        guard let familyId = currentFamily?.id else { throw AppStateError.noFamily }
+        let db = FirebaseFirestore.Firestore.firestore()
+        try await db.collection("families").document(familyId).updateData(["currentPlannerIndex": index])
+        currentFamily?.currentPlannerIndex = index
+    }
+
+    @MainActor
     func updateProfile(name: String, profileImageURL: String?) async throws {
         guard var user = currentUser else { return }
         user.name = name
         user.profileImageURL = profileImageURL
         try await userRepository.updateUser(user)
         currentUser = user
+
+        // members 서브컬렉션도 동기화
+        if let familyId = currentFamily?.id {
+            let db = FirebaseFirestore.Firestore.firestore()
+            try await db.collection("families").document(familyId)
+                .collection("members").document(user.id)
+                .updateData([
+                    "name": name,
+                    "profileImageURL": profileImageURL as Any,
+                ])
+            await refreshMembers()
+        }
     }
 
     // MARK: - 프로필 사진 업로드
