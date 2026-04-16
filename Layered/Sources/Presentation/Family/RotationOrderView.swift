@@ -220,12 +220,15 @@ struct RotationOrderView: View {
                 // rotationMode 저장
                 try await appState.updateRotationMode(selectedMode.rawValue)
 
-                // 자동 모드: 순서 저장
                 if selectedMode == .auto {
+                    // 자동 모드: 순서 저장
                     let orders = members.enumerated().map {
                         (memberId: $0.element.id, order: $0.offset)
                     }
                     try await appState.updateRotationOrder(orders)
+                } else {
+                    // 수동 모드: 선택한 플래너 인덱스 저장
+                    try await appState.updateCurrentPlannerIndex(fixedPlannerIndex)
                 }
 
                 toast = ToastData(type: .success, message: "저장되었습니다")
