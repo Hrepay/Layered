@@ -441,10 +441,10 @@ final class AppState {
         try await userRepository.updateUser(user)
         currentUser = user
 
-        // members 서브컬렉션도 동기화
+        // members 서브컬렉션도 동기화 (실패해도 저장은 성공으로 처리)
         if let familyId = currentFamily?.id {
             let db = FirebaseFirestore.Firestore.firestore()
-            try await db.collection("families").document(familyId)
+            try? await db.collection("families").document(familyId)
                 .collection("members").document(user.id)
                 .updateData([
                     "name": name,
