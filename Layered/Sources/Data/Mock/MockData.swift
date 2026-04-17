@@ -208,7 +208,7 @@ enum MockData {
             memberId: "user-003",
             memberName: "아빠",
             photos: [],
-            comment: "자전거 타기 딱 좋은 날씨였네. 다음에도 한강으로 가자.",
+            comment: "자전거 타기 좋은 날씨. 다음에도 한강으로.",
             rating: 4,
             createdAt: daysFromNow(-4, hour: 20),
             updatedAt: daysFromNow(-4, hour: 20)
