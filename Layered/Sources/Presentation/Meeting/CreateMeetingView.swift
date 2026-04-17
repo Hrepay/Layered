@@ -215,6 +215,7 @@ struct CreateMeetingView: View {
             })
             .environment(appState)
         }
+        .dismissKeyboardOnTap()
     }
 
     // MARK: - Helpers

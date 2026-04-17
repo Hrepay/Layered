@@ -170,6 +170,7 @@ struct EditMeetingView: View {
             }
         }
         .swipeBack(onBack: onBack)
+        .dismissKeyboardOnTap()
     }
 
     private func fetchLinkPreview(_ urlString: String) {

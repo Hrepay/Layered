@@ -233,4 +233,16 @@ extension View {
     func swipeBack(onBack: @escaping () -> Void) -> some View {
         modifier(SwipeBackModifier(onBack: onBack))
     }
+
+    /// 다른 곳을 탭하면 키보드 내림 (Button 동작은 유지)
+    func dismissKeyboardOnTap() -> some View {
+        simultaneousGesture(
+            TapGesture().onEnded {
+                UIApplication.shared.sendAction(
+                    #selector(UIResponder.resignFirstResponder),
+                    to: nil, from: nil, for: nil
+                )
+            }
+        )
+    }
 }

@@ -126,6 +126,7 @@ struct CreatePollView: View {
             }
         }
         .swipeBack(onBack: onBack)
+        .dismissKeyboardOnTap()
     }
 
     private var isValid: Bool {

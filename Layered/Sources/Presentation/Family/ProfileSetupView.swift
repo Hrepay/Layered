@@ -74,6 +74,7 @@ struct ProfileSetupView: View {
             ImagePicker(selectedImage: $selectedImage)
         }
         .swipeBack(onBack: onBack)
+        .dismissKeyboardOnTap()
     }
 }
 

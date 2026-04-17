@@ -43,6 +43,7 @@ struct CreateFamilyView: View {
             Spacer()
         }
         .swipeBack(onBack: onBack)
+        .dismissKeyboardOnTap()
     }
 }
 
