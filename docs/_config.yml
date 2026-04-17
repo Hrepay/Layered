@@ -1,0 +1,9 @@
+title: 겹겹 (Layered)
+description: 가족과 함께하는 주간 모임을 계획하고 기록하는 iOS 앱의 법적 문서
+theme: jekyll-theme-minimal
+show_downloads: false
+lang: ko-KR
+
+exclude:
+  - ARCHITECTURE.md
+  - DESIGN_GUIDE.md
