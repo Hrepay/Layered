@@ -184,20 +184,25 @@ struct PollVoteView: View {
                 Haptic.medium()
                 if let appState, !meetingId.isEmpty {
                     Task {
-                        let toRemove = previousVotes.subtracting(selectedOptions)
-                        for optionId in toRemove {
-                            try? await appState.removeVote(meetingId: meetingId, pollId: poll.id, optionId: optionId)
+                        do {
+                            let toRemove = previousVotes.subtracting(selectedOptions)
+                            for optionId in toRemove {
+                                try await appState.removeVote(meetingId: meetingId, pollId: poll.id, optionId: optionId)
+                            }
+                            let toAdd = selectedOptions.subtracting(previousVotes)
+                            for optionId in toAdd {
+                                try await appState.vote(meetingId: meetingId, pollId: poll.id, optionId: optionId)
+                            }
+                            if let updated = try? await appState.getPoll(meetingId: meetingId, pollId: poll.id) {
+                                withAnimation { poll = updated }
+                            }
+                            previousVotes = selectedOptions
+                            let wasVoted = hasVoted
+                            withAnimation { hasVoted = true }
+                            toast = ToastData(type: .success, message: wasVoted ? "투표가 변경되었습니다" : "투표 완료!")
+                        } catch {
+                            appState.error = AppError.from(error)
                         }
-                        let toAdd = selectedOptions.subtracting(previousVotes)
-                        for optionId in toAdd {
-                            try? await appState.vote(meetingId: meetingId, pollId: poll.id, optionId: optionId)
-                        }
-                        if let updated = try? await appState.getPoll(meetingId: meetingId, pollId: poll.id) {
-                            withAnimation { poll = updated }
-                        }
-                        previousVotes = selectedOptions
-                        withAnimation { hasVoted = true }
-                        toast = ToastData(type: .success, message: hasVoted ? "투표가 변경되었습니다" : "투표 완료!")
                     }
                 } else {
                     withAnimation { hasVoted = true }
@@ -223,8 +228,12 @@ struct PollVoteView: View {
             Button("삭제", role: .destructive) {
                 if let appState, !meetingId.isEmpty {
                     Task {
-                        try? await appState.deletePoll(meetingId: meetingId, pollId: poll.id)
-                        onBack()
+                        do {
+                            try await appState.deletePoll(meetingId: meetingId, pollId: poll.id)
+                            onBack()
+                        } catch {
+                            appState.error = AppError.from(error)
+                        }
                     }
                 } else {
                     onBack()

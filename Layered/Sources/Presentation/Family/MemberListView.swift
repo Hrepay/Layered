@@ -6,6 +6,7 @@ struct MemberListView: View {
 
     @State private var showKickAlert = false
     @State private var memberToKick: Member?
+    @State private var showInvite = false
 
     private var members: [Member] { appState?.members ?? [] }
     private var family: Family? { appState?.currentFamily }
@@ -18,26 +19,43 @@ struct MemberListView: View {
                 backAction: onBack
             )
 
-            ScrollView {
-                LazyVStack(spacing: 0) {
-                    ForEach(members) { member in
-                        memberRow(member)
+            if members.isEmpty {
+                EmptyStateView(
+                    icon: "person.2.fill",
+                    title: "아직 구성원이 없어요",
+                    description: "가족을 초대해서 함께 시작해보세요",
+                    buttonTitle: "초대하기",
+                    buttonAction: { showInvite = true }
+                )
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(members) { member in
+                            memberRow(member)
 
-                        if member.id != members.last?.id {
-                            Divider()
-                                .padding(.leading, 76)
+                            if member.id != members.last?.id {
+                                Divider()
+                                    .padding(.leading, 76)
+                            }
                         }
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 8)
             }
+        }
+        .fullScreenCover(isPresented: $showInvite) {
+            InviteMemberView(onBack: { showInvite = false })
+                .environment(appState)
         }
         .alert("구성원 강퇴", isPresented: $showKickAlert) {
             Button("취소", role: .cancel) {}
             Button("강퇴", role: .destructive) {
                 if let memberId = memberToKick?.id, let appState {
-                    Task { try? await appState.removeMember(memberId) }
+                    Task {
+                        do { try await appState.removeMember(memberId) }
+                        catch { appState.error = AppError.from(error) }
+                    }
                 }
             }
         } message: {

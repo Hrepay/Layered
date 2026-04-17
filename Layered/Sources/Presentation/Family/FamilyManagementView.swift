@@ -69,7 +69,10 @@ struct FamilyManagementView: View {
             Button("취소", role: .cancel) {}
             Button("변경") {
                 guard !newFamilyName.isEmpty else { return }
-                Task { try? await appState?.updateFamilyName(newFamilyName) }
+                Task {
+                    do { try await appState?.updateFamilyName(newFamilyName) }
+                    catch { appState?.error = AppError.from(error) }
+                }
             }
         } message: {
             Text("새로운 가정 이름을 입력해주세요.")
@@ -77,7 +80,10 @@ struct FamilyManagementView: View {
         .alert("가정 나가기", isPresented: $showLeaveAlert) {
             Button("취소", role: .cancel) {}
             Button("나가기", role: .destructive) {
-                Task { try? await appState?.leaveFamily() }
+                Task {
+                    do { try await appState?.leaveFamily() }
+                    catch { appState?.error = AppError.from(error) }
+                }
             }
         } message: {
             Text("정말 나가시겠습니까?\n가정 데이터에서 제외됩니다.")
@@ -85,7 +91,10 @@ struct FamilyManagementView: View {
         .alert("가정 삭제", isPresented: $showDeleteAlert) {
             Button("취소", role: .cancel) {}
             Button("삭제", role: .destructive) {
-                Task { try? await appState?.deleteFamily() }
+                Task {
+                    do { try await appState?.deleteFamily() }
+                    catch { appState?.error = AppError.from(error) }
+                }
             }
         } message: {
             Text("모든 데이터가 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.")

@@ -280,8 +280,12 @@ struct MeetingDetailView: View {
                 meeting = updatedMeeting
                 if let appState {
                     Task {
-                        try? await appState.updateMeeting(updatedMeeting)
-                        onUpdated?()
+                        do {
+                            try await appState.updateMeeting(updatedMeeting)
+                            onUpdated?()
+                        } catch {
+                            appState.error = AppError.from(error)
+                        }
                     }
                 }
             })
@@ -300,8 +304,12 @@ struct MeetingDetailView: View {
             Button("삭제", role: .destructive) {
                 if let appState {
                     Task {
-                        try? await appState.deleteMeeting(meeting.id)
-                        onDeleted?()
+                        do {
+                            try await appState.deleteMeeting(meeting.id)
+                            onDeleted?()
+                        } catch {
+                            appState.error = AppError.from(error)
+                        }
                     }
                 }
             }

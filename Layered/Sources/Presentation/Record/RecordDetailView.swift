@@ -170,8 +170,12 @@ struct RecordDetailView: View {
                 showCreateRecord = false
                 if let appState {
                     Task {
-                        _ = try? await appState.createRecord(meetingId: meeting.id, record: record)
-                        await loadRecords()
+                        do {
+                            _ = try await appState.createRecord(meetingId: meeting.id, record: record)
+                            await loadRecords()
+                        } catch {
+                            appState.error = AppError.from(error)
+                        }
                     }
                 }
             })
@@ -182,8 +186,12 @@ struct RecordDetailView: View {
             Button("삭제", role: .destructive) {
                 if let record = recordToDelete, let appState {
                     Task {
-                        try? await appState.deleteRecord(meetingId: meeting.id, recordId: record.id)
-                        await loadRecords()
+                        do {
+                            try await appState.deleteRecord(meetingId: meeting.id, recordId: record.id)
+                            await loadRecords()
+                        } catch {
+                            appState.error = AppError.from(error)
+                        }
                     }
                 }
             }
@@ -195,8 +203,12 @@ struct RecordDetailView: View {
             Button("삭제", role: .destructive) {
                 if let appState {
                     Task {
-                        try? await appState.deleteMeeting(meeting.id)
-                        onDeleted?()
+                        do {
+                            try await appState.deleteMeeting(meeting.id)
+                            onDeleted?()
+                        } catch {
+                            appState.error = AppError.from(error)
+                        }
                     }
                 }
             }

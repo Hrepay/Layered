@@ -127,7 +127,7 @@ struct HomeView: View {
                                     _ = try await appState.createPoll(meetingId: created.id, poll: poll)
                                 }
                             } catch {
-                                appState.errorMessage = error.localizedDescription
+                                appState.error = AppError.from(error)
                             }
                         }
                     }
@@ -141,9 +141,13 @@ struct HomeView: View {
                     showCreateRecord = nil
                     if let appState {
                         Task {
-                            _ = try? await appState.createRecord(meetingId: meeting.id, record: record)
-                            await appState.checkMyRecords()
-                            toast = ToastData(type: .success, message: "기록이 저장되었습니다")
+                            do {
+                                _ = try await appState.createRecord(meetingId: meeting.id, record: record)
+                                await appState.checkMyRecords()
+                                toast = ToastData(type: .success, message: "기록이 저장되었습니다")
+                            } catch {
+                                appState.error = AppError.from(error)
+                            }
                         }
                     }
                 })
