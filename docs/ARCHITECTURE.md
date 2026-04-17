@@ -59,6 +59,11 @@ users/{uid}
 | profileImageURL | String? | 프로필 사진 URL |
 | familyId | String? | 소속 가정 ID (nil이면 미가입) |
 | createdAt | Date | 가입일 |
+| agreedTermsAt | Date? | 약관 동의 시각 |
+| agreedTermsVersion | String? | 동의한 약관 버전 (예: "1.0") |
+| marketingConsent | Bool? | 마케팅 정보 수신 동의 여부 |
+
+> Firestore 전용 필드(Swift 모델엔 없음): `fcmToken`, `notificationsEnabled`, `notifyPlannerReminder`, `notifyMeetingCreated`
 
 ### Family — families/{familyId}
 | 필드 | 타입 | 설명 |
