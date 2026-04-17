@@ -107,7 +107,7 @@ struct CreateMeetingView: View {
                             .textInputAutocapitalization(.never)
                             .keyboardType(.URL)
                             .onChange(of: placeURL) { _, newValue in
-                                fetchLinkPreview(newValue)
+                                handlePlaceURLChange(newValue)
                             }
 
                         if isLoadingLink {
@@ -215,14 +215,23 @@ struct CreateMeetingView: View {
             })
             .environment(appState)
         }
-        .dismissKeyboardOnTap()
     }
 
     // MARK: - Helpers
 
+    /// 텍스트 변경 시: 여러 줄 텍스트가 들어오면 URL만 추출해서 필드를 갈아끼우고, 그 URL로 미리보기 요청
+    private func handlePlaceURLChange(_ newValue: String) {
+        if let extracted = URLExtractor.firstURL(in: newValue),
+           extracted.absoluteString != newValue {
+            placeURL = extracted.absoluteString
+            return // onChange가 다시 호출되면서 fetchLinkPreview 진행
+        }
+        fetchLinkPreview(newValue)
+    }
+
     private func fetchLinkPreview(_ urlString: String) {
         linkMetadata = nil
-        guard let url = URL(string: urlString), url.scheme != nil else { return }
+        guard let url = URLExtractor.firstURL(in: urlString) else { return }
 
         isLoadingLink = true
         let provider = LPMetadataProvider()

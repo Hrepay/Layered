@@ -99,7 +99,7 @@ struct EditMeetingView: View {
                             .textInputAutocapitalization(.never)
                             .keyboardType(.URL)
                             .onChange(of: placeURL) { _, newValue in
-                                fetchLinkPreview(newValue)
+                                handlePlaceURLChange(newValue)
                             }
 
                         if isLoadingLink {
@@ -170,12 +170,20 @@ struct EditMeetingView: View {
             }
         }
         .swipeBack(onBack: onBack)
-        .dismissKeyboardOnTap()
+    }
+
+    private func handlePlaceURLChange(_ newValue: String) {
+        if let extracted = URLExtractor.firstURL(in: newValue),
+           extracted.absoluteString != newValue {
+            placeURL = extracted.absoluteString
+            return
+        }
+        fetchLinkPreview(newValue)
     }
 
     private func fetchLinkPreview(_ urlString: String) {
         linkMetadata = nil
-        guard let url = URL(string: urlString), url.scheme != nil else { return }
+        guard let url = URLExtractor.firstURL(in: urlString) else { return }
 
         isLoadingLink = true
         let provider = LPMetadataProvider()
