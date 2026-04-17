@@ -47,7 +47,7 @@ struct HomeView: View {
                 VStack(spacing: 20) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("\(family.name) 가족")
-                            .font(.title2)
+                            .font(.largeTitle)
                             .bold()
                         Text("우리 가족의 소중한 겹겹의 기록")
                             .font(.subheadline)

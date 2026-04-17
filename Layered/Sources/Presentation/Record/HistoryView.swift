@@ -13,6 +13,15 @@ struct HistoryView: View {
             Group {
                 if meetings.isEmpty {
                     VStack(spacing: 16) {
+                        HStack {
+                            Text("히스토리")
+                                .font(.largeTitle)
+                                .bold()
+                            Spacer()
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 12)
+
                         Spacer()
 
                         Image(systemName: "clock.fill")
@@ -29,6 +38,14 @@ struct HistoryView: View {
                 } else {
                     ScrollView {
                         VStack(spacing: 20) {
+                            HStack {
+                                Text("히스토리")
+                                    .font(.largeTitle)
+                                    .bold()
+                                Spacer()
+                            }
+                            .padding(.top, 12)
+
                             // MARK: - 상단 통계 카드
                             HStack(spacing: 12) {
                                 statCard(
@@ -140,7 +157,8 @@ struct HistoryView: View {
                     }
                 }
             }
-            .navigationTitle("히스토리")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
             .fullScreenCover(item: $selectedMeeting) { meeting in
                 RecordDetailView(meeting: meeting, onBack: {
                     selectedMeeting = nil
