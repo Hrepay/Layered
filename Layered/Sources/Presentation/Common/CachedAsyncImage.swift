@@ -6,6 +6,7 @@ struct CachedAsyncImage: View {
 
     @State private var image: UIImage?
     @State private var isLoading = false
+    @State private var didFail = false
 
     var body: some View {
         Group {
@@ -15,6 +16,14 @@ struct CachedAsyncImage: View {
                     .scaledToFill()
             } else if isLoading {
                 ProgressView()
+                    .tint(AppColors.primary)
+            } else if didFail {
+                ZStack {
+                    Color(.systemGray6)
+                    Image(systemName: "photo.badge.exclamationmark")
+                        .font(.title3)
+                        .foregroundStyle(.tertiary)
+                }
             } else {
                 Color(.systemGray5)
             }
@@ -26,6 +35,7 @@ struct CachedAsyncImage: View {
 
     private func loadImage() async {
         guard let url, image == nil else { return }
+        didFail = false
 
         // 캐시 확인
         let request = URLRequest(url: url)
@@ -37,15 +47,18 @@ struct CachedAsyncImage: View {
 
         // 네트워크 다운로드
         isLoading = true
+        defer { isLoading = false }
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
             if let uiImage = UIImage(data: data) {
-                // 캐시 저장
                 let cachedResponse = CachedURLResponse(response: response, data: data)
                 URLCache.shared.storeCachedResponse(cachedResponse, for: request)
                 image = uiImage
+            } else {
+                didFail = true
             }
-        } catch {}
-        isLoading = false
+        } catch {
+            didFail = true
+        }
     }
 }
