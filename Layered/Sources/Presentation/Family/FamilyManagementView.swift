@@ -38,7 +38,7 @@ struct FamilyManagementView: View {
                 // 나가기 버튼
                 row(
                     icon: "rectangle.portrait.and.arrow.right.fill",
-                    iconColor: .red,
+                    iconColor: AppColors.primary,
                     title: "가정 나가기"
                 ) {
                     showLeaveAlert = true
@@ -50,7 +50,7 @@ struct FamilyManagementView: View {
                     // 삭제 버튼 (관리자만)
                     row(
                         icon: "trash.fill",
-                        iconColor: .red,
+                        iconColor: AppColors.primary,
                         title: "가정 삭제"
                     ) {
                         showDeleteAlert = true

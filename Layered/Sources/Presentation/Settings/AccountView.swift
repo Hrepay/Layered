@@ -16,7 +16,7 @@ struct AccountView: View {
                 VStack(spacing: 0) {
                     row(
                         icon: "rectangle.portrait.and.arrow.right.fill",
-                        iconColor: .red,
+                        iconColor: AppColors.primary,
                         title: "로그아웃"
                     ) {
                         showLogoutAlert = true
@@ -26,7 +26,7 @@ struct AccountView: View {
 
                     row(
                         icon: "trash.fill",
-                        iconColor: .red,
+                        iconColor: AppColors.primary,
                         title: "계정 삭제"
                     ) {
                         showDeleteAlert = true
