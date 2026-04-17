@@ -12,7 +12,7 @@ struct HistoryView: View {
         NavigationStack {
             Group {
                 if meetings.isEmpty {
-                    VStack(spacing: 16) {
+                    VStack(spacing: 0) {
                         HStack {
                             Text("히스토리")
                                 .font(.largeTitle)
@@ -22,18 +22,11 @@ struct HistoryView: View {
                         .padding(.horizontal, 20)
                         .padding(.top, 12)
 
-                        Spacer()
-
-                        Image(systemName: "clock.fill")
-                            .font(.system(size: 44))
-                            .foregroundStyle(Color(.systemGray4))
-
-                        Text("첫 번째 가족 모임의 추억을\n남겨보세요")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-
-                        Spacer()
+                        EmptyStateView(
+                            icon: "clock.fill",
+                            title: "아직 모임 기록이 없어요",
+                            description: "첫 번째 가족 모임의 추억을 남겨보세요"
+                        )
                     }
                 } else {
                     ScrollView {
@@ -173,7 +166,8 @@ struct HistoryView: View {
                 Button("삭제", role: .destructive) {
                     if let meeting = meetingToDelete, let appState {
                         Task {
-                            try? await appState.deleteMeeting(meeting.id)
+                            do { try await appState.deleteMeeting(meeting.id) }
+                            catch { appState.error = AppError.from(error) }
                         }
                     }
                 }
