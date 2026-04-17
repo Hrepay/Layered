@@ -7,14 +7,16 @@ let project = Project(
             "DEVELOPMENT_TEAM": "BBVZV8T99P",
             "CODE_SIGN_STYLE": "Automatic",
             "OTHER_LDFLAGS": "-ObjC",
+            "TARGETED_DEVICE_FAMILY": "1", // iPhone only
         ]
     ),
     targets: [
         .target(
             name: "Layered",
-            destinations: .iOS,
+            destinations: [.iPhone],
             product: .app,
             bundleId: "dev.tuist.Layered",
+            deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(
                 with: [
                     "UILaunchScreen": [
@@ -22,6 +24,9 @@ let project = Project(
                         "UIImageName": "",
                     ],
                     "NSPhotoLibraryAddUsageDescription": "모임 사진을 기기에 저장하기 위해 사진첩 접근이 필요합니다.",
+                    "UISupportedInterfaceOrientations": [
+                        "UIInterfaceOrientationPortrait",
+                    ],
                 ]
             ),
             sources: [
@@ -40,7 +45,7 @@ let project = Project(
         ),
         .target(
             name: "LayeredTests",
-            destinations: .iOS,
+            destinations: [.iPhone],
             product: .unitTests,
             bundleId: "dev.tuist.LayeredTests",
             infoPlist: .default,
