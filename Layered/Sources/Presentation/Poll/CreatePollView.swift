@@ -125,6 +125,7 @@ struct CreatePollView: View {
                 .padding(.bottom, 40)
             }
         }
+        .swipeBack(onBack: onBack)
     }
 
     private var isValid: Bool {

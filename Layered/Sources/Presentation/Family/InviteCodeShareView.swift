@@ -79,6 +79,7 @@ struct InviteCodeShareView: View {
 
             Spacer()
         }
+        .swipeBack(onBack: onDone)
     }
 }
 

@@ -209,6 +209,7 @@ struct CreateRecordView: View {
                 }
             ))
         }
+        .swipeBack(onBack: onBack)
     }
 
     private var isValid: Bool {

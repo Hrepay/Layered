@@ -211,16 +211,21 @@ struct SwipeBackModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .gesture(
-                DragGesture(minimumDistance: 20, coordinateSpace: .global)
-                    .onEnded { value in
-                        // 왼쪽 엣지에서 시작 + 오른쪽으로 100pt 이상 드래그
-                        if value.startLocation.x < 50 && value.translation.width > 100 {
-                            Haptic.light()
-                            onBack()
-                        }
-                    }
-            )
+            .overlay(alignment: .leading) {
+                Color.clear
+                    .frame(width: 20)
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture(minimumDistance: 10)
+                            .onEnded { value in
+                                if value.translation.width > 60 {
+                                    Haptic.light()
+                                    onBack()
+                                }
+                            }
+                    )
+                    .ignoresSafeArea()
+            }
     }
 }
 

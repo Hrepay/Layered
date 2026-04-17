@@ -95,6 +95,7 @@ struct InviteMemberView: View {
         .task {
             generateCode()
         }
+        .swipeBack(onBack: onBack)
     }
 
     private func generateCode() {

@@ -169,6 +169,7 @@ struct EditMeetingView: View {
                 fetchLinkPreview(placeURL)
             }
         }
+        .swipeBack(onBack: onBack)
     }
 
     private func fetchLinkPreview(_ urlString: String) {

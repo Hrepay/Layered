@@ -92,6 +92,7 @@ struct JoinFamilyView: View {
         } message: {
             Text("유효하지 않은 코드입니다.\n코드를 다시 확인해주세요.")
         }
+        .swipeBack(onBack: onBack)
     }
 
     private func verifyCode() {

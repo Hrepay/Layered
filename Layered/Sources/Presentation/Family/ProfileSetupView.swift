@@ -73,6 +73,7 @@ struct ProfileSetupView: View {
         .sheet(isPresented: $showImagePicker) {
             ImagePicker(selectedImage: $selectedImage)
         }
+        .swipeBack(onBack: onBack)
     }
 }
 
