@@ -97,7 +97,7 @@ struct HomeView: View {
             .toast($toast)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(.hidden, for: .navigationBar)
-            .task(id: upcomingMeeting?.id) {
+            .task(id: "\(upcomingMeeting?.id ?? "")|\(upcomingMeeting?.placeURL ?? "")") {
                 meetingLinkMetadata = nil
                 if let urlString = upcomingMeeting?.placeURL, let url = URL(string: urlString) {
                     let provider = LPMetadataProvider()

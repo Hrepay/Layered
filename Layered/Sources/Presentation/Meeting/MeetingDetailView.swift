@@ -264,7 +264,8 @@ struct MeetingDetailView: View {
                 await reloadDetail()
             }
         }
-        .task {
+        .task(id: "\(meeting.id)|\(meeting.placeURL ?? "")") {
+            linkMetadata = nil
             await reloadDetail()
         }
         .fullScreenCover(isPresented: $showEdit) {
