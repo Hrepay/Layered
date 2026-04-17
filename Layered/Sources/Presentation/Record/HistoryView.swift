@@ -134,6 +134,10 @@ struct HistoryView: View {
                         .padding(.horizontal, 20)
                         .padding(.bottom, 40)
                     }
+                    .refreshable {
+                        await appState?.refreshMeetings()
+                        await appState?.checkMyRecords()
+                    }
                 }
             }
             .navigationTitle("히스토리")
