@@ -14,6 +14,20 @@ enum AuthState: Equatable {
 
 @Observable
 final class AppState {
+    // MARK: - Mock 모드 스위치 (스크린샷·데모용)
+    #if DEBUG
+    /// true로 바꾸고 빌드하면 Firebase 대신 MockData로 홈부터 바로 진입. App Store 스크린샷 찍을 때 사용.
+    nonisolated(unsafe) static var useMockForScreenshots = false
+    #endif
+
+    private var shouldUseMock: Bool {
+        #if DEBUG
+        return Self.useMockForScreenshots
+        #else
+        return false
+        #endif
+    }
+
     var authState: AuthState = .splash
     var currentUser: User?
     var currentFamily: Family?
@@ -36,35 +50,51 @@ final class AppState {
     nonisolated private var _storageRepository: StorageRepositoryProtocol?
 
     private var authRepository: AuthRepositoryProtocol {
-        if _authRepository == nil { _authRepository = FirebaseAuthRepository() }
+        if _authRepository == nil {
+            _authRepository = shouldUseMock ? MockAuthRepository() : FirebaseAuthRepository()
+        }
         return _authRepository!
     }
     var userRepository: UserRepositoryProtocol {
-        if _userRepository == nil { _userRepository = FirebaseUserRepository() }
+        if _userRepository == nil {
+            _userRepository = shouldUseMock ? MockUserRepository() : FirebaseUserRepository()
+        }
         return _userRepository!
     }
     var familyRepository: FamilyRepositoryProtocol {
-        if _familyRepository == nil { _familyRepository = FirebaseFamilyRepository() }
+        if _familyRepository == nil {
+            _familyRepository = shouldUseMock ? MockFamilyRepository() : FirebaseFamilyRepository()
+        }
         return _familyRepository!
     }
     var memberRepository: MemberRepositoryProtocol {
-        if _memberRepository == nil { _memberRepository = FirebaseMemberRepository() }
+        if _memberRepository == nil {
+            _memberRepository = shouldUseMock ? MockMemberRepository() : FirebaseMemberRepository()
+        }
         return _memberRepository!
     }
     var meetingRepository: MeetingRepositoryProtocol {
-        if _meetingRepository == nil { _meetingRepository = FirebaseMeetingRepository() }
+        if _meetingRepository == nil {
+            _meetingRepository = shouldUseMock ? MockMeetingRepository() : FirebaseMeetingRepository()
+        }
         return _meetingRepository!
     }
     var pollRepository: PollRepositoryProtocol {
-        if _pollRepository == nil { _pollRepository = FirebasePollRepository() }
+        if _pollRepository == nil {
+            _pollRepository = shouldUseMock ? MockPollRepository() : FirebasePollRepository()
+        }
         return _pollRepository!
     }
     var recordRepository: RecordRepositoryProtocol {
-        if _recordRepository == nil { _recordRepository = FirebaseRecordRepository() }
+        if _recordRepository == nil {
+            _recordRepository = shouldUseMock ? MockRecordRepository() : FirebaseRecordRepository()
+        }
         return _recordRepository!
     }
     var storageRepository: StorageRepositoryProtocol {
-        if _storageRepository == nil { _storageRepository = FirebaseStorageRepository() }
+        if _storageRepository == nil {
+            _storageRepository = shouldUseMock ? MockStorageRepository() : FirebaseStorageRepository()
+        }
         return _storageRepository!
     }
 
@@ -75,6 +105,23 @@ final class AppState {
 
     // MARK: - 스플래시 후 상태 결정
     func checkAuthState() {
+        #if DEBUG
+        if Self.useMockForScreenshots {
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 1_200_000_000)
+                currentUser = MockData.currentUser
+                currentFamily = MockData.family
+                members = MockData.members
+                meetings = MockData.meetings
+                myRecordedMeetingIds = []
+                averageRating = 4.8
+                consecutiveWeeks = 6
+                authState = .home
+            }
+            return
+        }
+        #endif
+
         // 애니메이션 2.4초 + 1초 대기 = 3.4초 최소 표시
         let minSplashSeconds: UInt64 = 3_400_000_000
         Task { @MainActor in
