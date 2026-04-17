@@ -6,6 +6,16 @@ struct LoginView: View {
 
     @State private var appeared = false
 
+    #if DEBUG
+    // Xcode Scheme → Run → Arguments → Environment Variables 에서 DEBUG_EMAIL, DEBUG_PASSWORD 설정 시에만 노출
+    private var debugCredentials: (String, String)? {
+        let env = ProcessInfo.processInfo.environment
+        guard let email = env["DEBUG_EMAIL"], !email.isEmpty,
+              let password = env["DEBUG_PASSWORD"], !password.isEmpty else { return nil }
+        return (email, password)
+    }
+    #endif
+
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
@@ -53,21 +63,23 @@ struct LoginView: View {
                 }
 
                 #if DEBUG
-                Button(action: {
-                    Haptic.light()
-                    onDebugSignIn?("dbrdldh11@naver.com", "dbrdldh11")
-                }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "envelope.fill")
-                            .font(.title3)
-                        Text("테스트 계정 로그인")
-                            .font(.headline)
+                if let (debugEmail, debugPassword) = debugCredentials {
+                    Button(action: {
+                        Haptic.light()
+                        onDebugSignIn?(debugEmail, debugPassword)
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "envelope.fill")
+                                .font(.title3)
+                            Text("테스트 계정 로그인")
+                                .font(.headline)
+                        }
+                        .foregroundStyle(.primary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color(.secondarySystemBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
                     }
-                    .foregroundStyle(.primary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(Color(.secondarySystemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
                 #endif
 
