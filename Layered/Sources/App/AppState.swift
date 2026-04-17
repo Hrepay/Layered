@@ -22,7 +22,7 @@ final class AppState {
     var averageRating: Double = 0
     var consecutiveWeeks: Int = 0
     var isLoading = false
-    var errorMessage: String?
+    var error: AppError?
 
     // @Observable은 lazy를 지원하지 않으므로 nonisolated로 선언
     nonisolated private var _authRepository: AuthRepositoryProtocol?
@@ -103,7 +103,8 @@ final class AppState {
     #if DEBUG
     func signInWithEmail(email: String, password: String) async {
         isLoading = true
-        errorMessage = nil
+        self.error = nil
+        defer { isLoading = false }
         do {
             let result = try await Auth.auth().signIn(withEmail: email, password: password)
             let uid = result.user.uid
@@ -117,8 +118,7 @@ final class AppState {
             try await userRepository.createUserIfNeeded(user)
             await loadUserData(uid: uid)
         } catch {
-            errorMessage = error.localizedDescription
-            isLoading = false
+            self.error = AppError.from(error)
         }
     }
     #endif
@@ -126,14 +126,14 @@ final class AppState {
     // MARK: - Apple 로그인
     func signInWithApple() async {
         isLoading = true
-        errorMessage = nil
+        self.error = nil
+        defer { isLoading = false }
         do {
             let user = try await authRepository.signInWithApple()
             try await userRepository.createUserIfNeeded(user)
             await loadUserData(uid: user.id)
         } catch {
-            errorMessage = error.localizedDescription
-            isLoading = false
+            self.error = AppError.from(error)
         }
     }
 
@@ -195,7 +195,7 @@ final class AppState {
             await refreshMembers()
             await checkMyRecords()
         } catch {
-            errorMessage = error.localizedDescription
+            self.error = AppError.from(error)
         }
     }
 
@@ -258,7 +258,7 @@ final class AppState {
         do {
             meetings = try await meetingRepository.getMeetings(familyId: familyId)
         } catch {
-            errorMessage = error.localizedDescription
+            self.error = AppError.from(error)
         }
     }
 
@@ -286,7 +286,7 @@ final class AppState {
 
             members = loadedMembers
         } catch {
-            errorMessage = error.localizedDescription
+            self.error = AppError.from(error)
         }
     }
 
@@ -512,6 +512,7 @@ final class AppState {
     // MARK: - 계정 삭제
     func deleteAccount() async {
         isLoading = true
+        defer { isLoading = false }
         do {
             try await authRepository.deleteAccount()
             currentUser = nil
@@ -520,9 +521,8 @@ final class AppState {
             meetings = []
             authState = .login
         } catch {
-            errorMessage = error.localizedDescription
+            self.error = AppError.from(error)
         }
-        isLoading = false
     }
 }
 

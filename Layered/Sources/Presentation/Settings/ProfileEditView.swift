@@ -29,7 +29,7 @@ struct ProfileEditView: View {
                             onBack()
                         } catch {
                             isUploading = false
-                            appState.errorMessage = error.localizedDescription
+                            appState.error = AppError.from(error)
                         }
                     }
                 },

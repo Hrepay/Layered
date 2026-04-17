@@ -237,7 +237,7 @@ struct RotationOrderView: View {
                     onBack()
                 }
             } catch {
-                appState.errorMessage = error.localizedDescription
+                appState.error = AppError.from(error)
             }
         }
     }

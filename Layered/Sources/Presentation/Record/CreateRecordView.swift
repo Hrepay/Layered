@@ -54,7 +54,7 @@ struct CreateRecordView: View {
                             onSaved(record)
                         } catch {
                             isUploading = false
-                            appState?.errorMessage = error.localizedDescription
+                            appState?.error = AppError.from(error)
                         }
                     }
                 },

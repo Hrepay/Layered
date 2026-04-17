@@ -61,7 +61,7 @@ struct FamilySetupView: View {
                             appState.isLoading = false
                             onJoined(family)
                         } catch {
-                            appState.errorMessage = error.localizedDescription
+                            appState.error = AppError.from(error)
                             appState.isLoading = false
                         }
                     }
@@ -97,7 +97,7 @@ struct FamilySetupView: View {
                 await appState.loadHomeData()
                 step = .inviteShare(family.inviteCode)
             } catch {
-                appState.errorMessage = error.localizedDescription
+                appState.error = AppError.from(error)
             }
             appState.isLoading = false
         }
