@@ -1,0 +1,74 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isMe(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isMemberOf(familyId) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/families/$(familyId)/members/$(request.auth.uid));
+    }
+
+    function isAdminOf(familyId) {
+      return isMemberOf(familyId)
+        && get(/databases/$(database)/documents/families/$(familyId)/members/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // users: 본인 문서는 본인만 쓰기. 읽기는 인증된 사용자에게 허용(가족 가입 플로우에서 상대 정보 조회)
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isMe(userId);
+    }
+
+    // families: 가족 멤버 기반 권한
+    match /families/{familyId} {
+      allow read: if isSignedIn();            // 초대 코드 검색 위해 인증된 사용자면 허용
+      allow create: if isSignedIn();
+      allow update: if isMemberOf(familyId);
+      allow delete: if isAdminOf(familyId);
+
+      // 멤버 서브컬렉션
+      match /members/{memberId} {
+        allow read: if isMemberOf(familyId) || isMe(memberId);
+        allow create: if isMe(memberId);       // 가입 시 본인만 자기 자신을 추가
+        allow update: if isMe(memberId) || isAdminOf(familyId);
+        allow delete: if isMe(memberId) || isAdminOf(familyId);
+      }
+
+      // 모임 서브컬렉션
+      match /meetings/{meetingId} {
+        allow read: if isMemberOf(familyId);
+        allow create: if isMemberOf(familyId);
+        allow update: if isMemberOf(familyId);
+        allow delete: if isMemberOf(familyId)
+          && (resource.data.plannerId == request.auth.uid || isAdminOf(familyId));
+
+        // 기록: 본인 기록만 수정/삭제
+        match /records/{recordId} {
+          allow read: if isMemberOf(familyId);
+          allow create: if isMemberOf(familyId)
+            && request.resource.data.memberId == request.auth.uid;
+          allow update, delete: if isMemberOf(familyId)
+            && resource.data.memberId == request.auth.uid;
+        }
+
+        // 투표: 가족 멤버는 조회/투표 가능
+        match /polls/{pollId} {
+          allow read, write: if isMemberOf(familyId);
+        }
+      }
+    }
+
+    // 위 경로 외 전부 차단
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
