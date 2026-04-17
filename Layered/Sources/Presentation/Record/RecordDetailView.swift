@@ -159,6 +159,9 @@ struct RecordDetailView: View {
                 .padding(.top, 8)
                 .padding(.bottom, 40)
             }
+            .refreshable {
+                await loadRecords()
+            }
         }
         .task {
             await loadRecords()

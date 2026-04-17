@@ -42,6 +42,9 @@ struct MemberListView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
                 }
+                .refreshable {
+                    await appState?.refreshMembers()
+                }
             }
         }
         .fullScreenCover(isPresented: $showInvite) {

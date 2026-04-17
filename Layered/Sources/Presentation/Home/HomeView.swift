@@ -91,6 +91,9 @@ struct HomeView: View {
                 .padding(.horizontal, 20)
                 .padding(.bottom, 24)
             }
+            .refreshable {
+                await appState?.loadHomeData()
+            }
             .toast($toast)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar(.hidden, for: .navigationBar)

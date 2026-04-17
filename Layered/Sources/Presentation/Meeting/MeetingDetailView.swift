@@ -259,18 +259,12 @@ struct MeetingDetailView: View {
                 .padding(.top, 8)
                 .padding(.bottom, 32)
             }
+            .refreshable {
+                await reloadDetail()
+            }
         }
         .task {
-            if meeting.hasPoll, let appState {
-                let polls = try? await appState.getPolls(meetingId: meeting.id)
-                poll = polls?.first
-            }
-            if let urlString = meeting.placeURL, let url = URL(string: urlString) {
-                let provider = LPMetadataProvider()
-                if let metadata = try? await provider.startFetchingMetadata(for: url) {
-                    linkMetadata = metadata
-                }
-            }
+            await reloadDetail()
         }
         .fullScreenCover(isPresented: $showEdit) {
             EditMeetingView(meeting: meeting, onBack: {
@@ -360,6 +354,19 @@ struct MeetingDetailView: View {
     }
 
     // MARK: - Helpers
+
+    private func reloadDetail() async {
+        if meeting.hasPoll, let appState {
+            let polls = try? await appState.getPolls(meetingId: meeting.id)
+            poll = polls?.first
+        }
+        if let urlString = meeting.placeURL, let url = URL(string: urlString) {
+            let provider = LPMetadataProvider()
+            if let metadata = try? await provider.startFetchingMetadata(for: url) {
+                linkMetadata = metadata
+            }
+        }
+    }
 
     private func refreshPoll() {
         guard let appState, let currentPoll = poll else { return }
