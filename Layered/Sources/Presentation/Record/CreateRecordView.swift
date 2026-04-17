@@ -13,13 +13,24 @@ struct CreateRecordView: View {
     @State private var animatedStar: Int? = nil
     @State private var showImagePicker = false
     @State private var isUploading = false
+    @State private var showExitAlert = false
     @FocusState private var commentFocused: Bool
+
+    private var hasUnsavedChanges: Bool {
+        !comment.isEmpty || rating > 0 || !selectedImages.isEmpty
+    }
 
     var body: some View {
         VStack(spacing: 0) {
             NavBar(
                 title: "모임 기록",
-                backAction: onBack,
+                backAction: {
+                    if hasUnsavedChanges {
+                        showExitAlert = true
+                    } else {
+                        onBack()
+                    }
+                },
                 trailingText: "완료",
                 trailingAction: {
                     Haptic.medium()
@@ -229,7 +240,12 @@ struct CreateRecordView: View {
                 }
             ))
         }
-        .swipeBack(onBack: onBack)
+        .alert("저장되지 않아요", isPresented: $showExitAlert) {
+            Button("취소", role: .cancel) {}
+            Button("나가기", role: .destructive) { onBack() }
+        } message: {
+            Text("지금 나가면 입력한 내용이 저장되지 않습니다.")
+        }
     }
 
     private var isValid: Bool {
