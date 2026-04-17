@@ -86,7 +86,7 @@ struct NotificationSettingsView: View {
         .task {
             await refreshPermissionStatus()
             guard !isLoaded else { return }
-            let settings = await appState.loadNotificationSettings() ?? NotificationSettings()
+            let settings = await appState.loadNotificationSettings()
             notificationsEnabled = settings.enabled
             plannerReminder = settings.plannerReminder
             meetingCreated = settings.meetingCreated

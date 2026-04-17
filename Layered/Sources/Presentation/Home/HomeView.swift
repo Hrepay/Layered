@@ -76,7 +76,7 @@ struct HomeView: View {
                         // 지난 모임 기록 카드
                         if let past = pastMeeting,
                            !dismissedRecordCard,
-                           !(appState.myRecordedMeetingIds.contains(past.id) ?? false) {
+                           !appState.myRecordedMeetingIds.contains(past.id) {
                             recordPromptCard(past)
                         }
 
