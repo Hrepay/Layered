@@ -59,35 +59,6 @@
 - **상세 기획서 (노션)**: https://www.notion.so/Layered-33e2b821dbfd8087afcad06bf229c4bd
 - **디자인 시스템 (노션)**: https://www.notion.so/3412b821dbfd812a905fc861a541dac2
 
-## 현재 진행 상황
+## 진행 상황
 
-작업마다 노션의 개발 계획 & 진행 상황 섹션을 업데이트/참고하여 진행.
-- Phase 0: 프로젝트 기반 세팅 ✅
-- Phase 1: UI 전체 구현 ✅ (디자인 시스템 적용 완료)
-- Phase 2: Firebase 연동 ✅ 완료
-- Phase 3: 자동화 & 푸시 알림 ✅ 완료 (Cloud Functions 배포, FCM 설정, APNs 키 등록)
-- Phase 4: 마무리 & 출시 (진행 중)
-  - 4-A: UI/UX 전면 개선 ✅ (홈/모임/설정/가정관리/계정관리 리디자인, 스플래시 애니메이션, 스와이프 백, 링크 미리보기, pull-to-refresh)
-  - 4-B: 버그 수정 ✅ (프로필 이미지 동기화, 수동 모드 플래너, 링크 캐시, 프로필 저장)
-  - 4-C: 알림 설정 연동 ✅ (3개 토글 Firestore 저장 + iOS 권한 체크 + Cloud Functions 배포)
-  - 4-D: UX 품질 개선 ✅ (전역 에러 처리 AppError, 빈 상태 통일, 글로벌 키보드 dismiss, URL 자동 추출)
-  - 4-E: 아키텍처 정리 ✅ (AppState에서 Firebase 직접 호출 제거, Optional AppState 통일, ImageProcessor 분리, iPhone 세로 전용)
-  - 4-F: 출시 준비 (진행 중)
-    - 앱 아이콘 / 로그인 화면 앱 로고 교체 ✅
-    - 모임 삭제 권한 플래너·관리자 제한 ✅
-    - 사진첩 접근 사유 구체화 ✅
-    - 번들 ID 교체 (`dev.tuist.Layered` → `io.github.hrepay.layered`) + Firebase iOS 앱 재등록 ✅
-    - Firestore/Storage 프로덕션 보안 규칙 배포 ✅
-    - 디버그 로그인 credentials 환경변수화 ✅
-    - FCM 토큰 동기화 버그 픽스 + APNs 키 재업로드 ✅
-    - 약관 3종(이용약관·개인정보·마케팅) 작성 → GitHub Pages 호스팅 ✅
-    - 로그인 전 약관 동의 시트 + 설정 내 약관 링크 ✅
-    - 스크린샷, TestFlight, 심사 제출 대기
-  - 4-G: 출시 직전 UX 디테일 ✅
-    - 모임 수정 시 과거 일시 저장 확인 Alert
-    - 네비게이션 우측 액션 문구 `완료`로 통일 (CreateFamily "다음"은 예외)
-    - 모임 계획/기록 작성 이탈 방어 Alert (입력 내용 있을 때만) + 기록 작성 스와이프 백 제거
-    - 장소 링크 추가·제거 시 홈/상세 미리보기 즉시 갱신 (`.task(id:)` 복합키)
-    - 기록 작성 TextEditor 포커스 시 자동 스크롤
-    - 기록 상세 상단 카드 탭 → 모임 상세 진입 (읽기 전용 모드)
-    - 기록 아바타에 최신 프로필 이미지 URL 연결
+단계별 진행 체크리스트와 세부 작업 현황은 노션의 [개발 계획 & 진행 상황](https://www.notion.so/3422b821dbfd810f8773d3fddfbf123b) 페이지에서 관리.
