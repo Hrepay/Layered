@@ -95,12 +95,12 @@ enum MockData {
             id: "meeting-past-1",
             plannerId: "user-002",
             plannerName: "엄마",
-            meetingDate: daysFromNow(-5, hour: 19, minute: 0),
-            place: "성수동 감자탕",
-            placeLatitude: 37.5446,
-            placeLongitude: 127.0561,
-            placeURL: "https://map.naver.com/v5/search/성수동 감자탕",
-            activity: "외식",
+            meetingDate: daysFromNow(-5, hour: 16, minute: 0),
+            place: "한강공원 반포지구",
+            placeLatitude: 37.5110,
+            placeLongitude: 126.9964,
+            placeURL: nil,
+            activity: "피크닉, 산책",
             status: .completed,
             hasPoll: false,
             createdAt: daysFromNow(-12),
@@ -176,39 +176,39 @@ enum MockData {
     )
 
     // MARK: - Records
-    /// RecordDetailView가 단일 배열을 받는 구조이므로 가장 최근 지난 모임(`meeting-past-1`) 기록만 반환.
+    /// RecordDetailView가 단일 배열을 받는 구조이므로 가장 최근 지난 모임(`meeting-past-1` = 한강공원 반포지구) 기록만 반환.
     static let records: [MeetingRecord] = [
         MeetingRecord(
             id: "record-001",
             memberId: "user-001",
             memberName: "상환",
             photos: [
-                "https://picsum.photos/seed/layered-food1/800/800",
-                "https://picsum.photos/seed/layered-food2/800/800",
+                "asset://MockHangang1",
+                "asset://MockHangang2",
             ],
-            comment: "엄마가 추천한 집이라 기대했는데 역시 뼈해장국이 끝내줬다. 고기도 듬뿍.",
+            comment: "오랜만에 한강 나와서 자전거도 타고 돗자리 깔고 간식도 먹었다. 날씨까지 완벽했음.",
             rating: 5,
-            createdAt: daysFromNow(-5, hour: 22),
-            updatedAt: daysFromNow(-5, hour: 22)
+            createdAt: daysFromNow(-5, hour: 21),
+            updatedAt: daysFromNow(-5, hour: 21)
         ),
         MeetingRecord(
             id: "record-002",
             memberId: "user-002",
             memberName: "엄마",
             photos: [
-                "https://picsum.photos/seed/layered-food3/800/800",
+                "asset://MockMomDog",
             ],
-            comment: "오랜만에 다 같이 모여서 좋았어. 다음엔 누나도 데려오자.",
+            comment: "강아지들 데리고 나왔는데 너무 신나 했어. 다음에 또 오자~",
             rating: 5,
-            createdAt: daysFromNow(-5, hour: 21, minute: 30),
-            updatedAt: daysFromNow(-5, hour: 21, minute: 30)
+            createdAt: daysFromNow(-5, hour: 20, minute: 30),
+            updatedAt: daysFromNow(-5, hour: 20, minute: 30)
         ),
         MeetingRecord(
             id: "record-003",
             memberId: "user-003",
             memberName: "아빠",
             photos: [],
-            comment: "양 많고 맛 좋음. 다음 모임도 여기로 가자.",
+            comment: "바람 시원하고 산책하기 딱 좋은 날씨였다. 다음에도 한강으로.",
             rating: 4,
             createdAt: daysFromNow(-4, hour: 20),
             updatedAt: daysFromNow(-4, hour: 20)

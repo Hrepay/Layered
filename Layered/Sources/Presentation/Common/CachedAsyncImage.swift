@@ -37,6 +37,17 @@ struct CachedAsyncImage: View {
         guard let url, image == nil else { return }
         didFail = false
 
+        // Mock 전용: asset://<이미지셋 이름> 스키마는 번들된 Assets에서 즉시 로드
+        if url.scheme == "asset" {
+            let name = url.host ?? url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            if let uiImage = UIImage(named: name) {
+                image = uiImage
+            } else {
+                didFail = true
+            }
+            return
+        }
+
         // 캐시 확인
         let request = URLRequest(url: url)
         if let cached = URLCache.shared.cachedResponse(for: request),
