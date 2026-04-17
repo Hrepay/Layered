@@ -416,12 +416,29 @@ final class AppState {
     }
 
     func leaveFamily() async throws {
-        guard let familyId = currentFamily?.id,
+        guard let family = currentFamily,
               let userId = currentUser?.id else { throw AppStateError.noFamily }
-        try await memberRepository.removeMember(familyId: familyId, memberId: userId)
+        let familyId = family.id
+
+        if members.count <= 1 {
+            // 마지막 구성원이 나가면 가정 자체를 삭제
+            try await familyRepository.deleteFamily(id: familyId)
+        } else {
+            // 관리자가 나가면 rotationOrder 기준 다음 구성원에게 역할 자동 이전
+            if family.adminId == userId {
+                if let nextAdmin = members
+                    .filter({ $0.id != userId })
+                    .sorted(by: { $0.rotationOrder < $1.rotationOrder })
+                    .first {
+                    try await memberRepository.transferAdmin(familyId: familyId, newAdminId: nextAdmin.id)
+                }
+            }
+            try await memberRepository.removeMember(familyId: familyId, memberId: userId)
+        }
+
         if var updatedUser = currentUser {
             updatedUser.familyId = nil
-            try await userRepository.updateUser(updatedUser)
+            try? await userRepository.updateUser(updatedUser)
             currentUser = updatedUser
         }
         currentFamily = nil
@@ -431,8 +448,10 @@ final class AppState {
     }
 
     func deleteFamily() async throws {
-        guard let familyId = currentFamily?.id else { throw AppStateError.noFamily }
-        try await familyRepository.deleteFamily(id: familyId)
+        guard let family = currentFamily,
+              let userId = currentUser?.id else { throw AppStateError.noFamily }
+        guard family.adminId == userId else { throw AppStateError.notAdmin }
+        try await familyRepository.deleteFamily(id: family.id)
         if var updatedUser = currentUser {
             updatedUser.familyId = nil
             try await userRepository.updateUser(updatedUser)
@@ -540,10 +559,12 @@ final class AppState {
 // MARK: - AppState Error
 enum AppStateError: LocalizedError {
     case noFamily
+    case notAdmin
 
     var errorDescription: String? {
         switch self {
         case .noFamily: return "가정 정보를 찾을 수 없습니다"
+        case .notAdmin: return "관리자만 수행할 수 있는 작업입니다"
         }
     }
 }

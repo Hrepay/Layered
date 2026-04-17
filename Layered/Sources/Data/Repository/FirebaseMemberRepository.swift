@@ -61,6 +61,15 @@ final class FirebaseMemberRepository: MemberRepositoryProtocol {
         ])
     }
 
+    func transferAdmin(familyId: String, newAdminId: String) async throws {
+        let batch = db.batch()
+        let familyRef = db.collection("families").document(familyId)
+        let newAdminRef = membersRef(familyId: familyId).document(newAdminId)
+        batch.updateData(["adminId": newAdminId], forDocument: familyRef)
+        batch.updateData(["role": "admin"], forDocument: newAdminRef)
+        try await batch.commit()
+    }
+
     // MARK: - Helpers
     private func memberFromDoc(_ doc: QueryDocumentSnapshot) -> Member {
         memberFromData(id: doc.documentID, data: doc.data())
