@@ -74,16 +74,21 @@ final class AppState {
 
     // MARK: - 스플래시 후 상태 결정
     func checkAuthState() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+        let minSplashSeconds: UInt64 = 3_000_000_000 // 3초 (애니메이션 시간)
+        Task { @MainActor in
+            async let minDelay: () = Task.sleep(nanoseconds: minSplashSeconds)
+
+            let nextState: AuthState
             if let firebaseUser = Auth.auth().currentUser {
-                Task { @MainActor in
-                    await self.loadUserData(uid: firebaseUser.uid)
-                }
-            } else if self.hasSeenOnboarding {
-                self.authState = .login
+                nextState = await resolveAuthState(uid: firebaseUser.uid)
+            } else if hasSeenOnboarding {
+                nextState = .login
             } else {
-                self.authState = .onboarding
+                nextState = .onboarding
             }
+
+            try? await minDelay
+            authState = nextState
         }
     }
 
@@ -134,7 +139,12 @@ final class AppState {
     // MARK: - 유저 데이터 로드 → 화면 분기
     @MainActor
     private func loadUserData(uid: String) async {
-        isLoading = true
+        let next = await resolveAuthState(uid: uid)
+        authState = next
+    }
+
+    @MainActor
+    private func resolveAuthState(uid: String) async -> AuthState {
         do {
             let user = try await userRepository.getUser(id: uid)
             currentUser = user
@@ -143,9 +153,9 @@ final class AppState {
                 let family = try await familyRepository.getFamily(id: familyId)
                 currentFamily = family
                 await loadHomeData()
-                authState = .home
+                return .home
             } else {
-                authState = .familySetup
+                return .familySetup
             }
         } catch {
             let newUser = User(
@@ -157,9 +167,8 @@ final class AppState {
             )
             try? await userRepository.createUserIfNeeded(newUser)
             currentUser = newUser
-            authState = .familySetup
+            return .familySetup
         }
-        isLoading = false
     }
 
     // MARK: - 가정 참여 완료

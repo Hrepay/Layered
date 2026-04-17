@@ -33,7 +33,7 @@ struct RootView: View {
             }
         }
         .animation(.easeInOut(duration: 0.3), value: appState.authState)
-        .loadingOverlay(appState.isLoading)
+        .loadingOverlay(appState.isLoading && appState.authState != .splash)
         .onAppear {
             appState.checkAuthState()
         }
