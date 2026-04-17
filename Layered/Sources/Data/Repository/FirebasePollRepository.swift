@@ -66,7 +66,7 @@ final class FirebasePollRepository: PollRepositoryProtocol {
     func vote(familyId: String, meetingId: String, pollId: String, optionId: String, userId: String) async throws {
         let ref = pollsRef(familyId: familyId, meetingId: meetingId).document(pollId)
         let doc = try await ref.getDocument()
-        guard var data = doc.data(),
+        guard let data = doc.data(),
               var options = data["options"] as? [[String: Any]] else { return }
 
         let isAnonymous = data["isAnonymous"] as? Bool ?? false
@@ -91,7 +91,7 @@ final class FirebasePollRepository: PollRepositoryProtocol {
     func removeVote(familyId: String, meetingId: String, pollId: String, optionId: String, userId: String) async throws {
         let ref = pollsRef(familyId: familyId, meetingId: meetingId).document(pollId)
         let doc = try await ref.getDocument()
-        guard var data = doc.data(),
+        guard let data = doc.data(),
               var options = data["options"] as? [[String: Any]] else { return }
 
         for i in options.indices {

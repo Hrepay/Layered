@@ -24,15 +24,15 @@ final class AppState {
     var isLoading = false
     var errorMessage: String?
 
-    // @Observable은 lazy를 지원하지 않으므로 nonisolated(unsafe)로 선언
-    nonisolated(unsafe) private var _authRepository: AuthRepositoryProtocol?
-    nonisolated(unsafe) private var _userRepository: UserRepositoryProtocol?
-    nonisolated(unsafe) private var _familyRepository: FamilyRepositoryProtocol?
-    nonisolated(unsafe) private var _memberRepository: MemberRepositoryProtocol?
-    nonisolated(unsafe) private var _meetingRepository: MeetingRepositoryProtocol?
-    nonisolated(unsafe) private var _pollRepository: PollRepositoryProtocol?
-    nonisolated(unsafe) private var _recordRepository: RecordRepositoryProtocol?
-    nonisolated(unsafe) private var _storageRepository: StorageRepositoryProtocol?
+    // @Observable은 lazy를 지원하지 않으므로 nonisolated로 선언
+    nonisolated private var _authRepository: AuthRepositoryProtocol?
+    nonisolated private var _userRepository: UserRepositoryProtocol?
+    nonisolated private var _familyRepository: FamilyRepositoryProtocol?
+    nonisolated private var _memberRepository: MemberRepositoryProtocol?
+    nonisolated private var _meetingRepository: MeetingRepositoryProtocol?
+    nonisolated private var _pollRepository: PollRepositoryProtocol?
+    nonisolated private var _recordRepository: RecordRepositoryProtocol?
+    nonisolated private var _storageRepository: StorageRepositoryProtocol?
 
     private var authRepository: AuthRepositoryProtocol {
         if _authRepository == nil { _authRepository = FirebaseAuthRepository() }

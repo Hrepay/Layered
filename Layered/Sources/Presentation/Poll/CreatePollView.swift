@@ -69,7 +69,7 @@ struct CreatePollView: View {
                                 if options.count > 2 {
                                     Button {
                                         Haptic.light()
-                                        withAnimation(.spring(duration: 0.25)) {
+                                        _ = withAnimation(.spring(duration: 0.25)) {
                                             options.remove(at: index)
                                         }
                                     } label: {

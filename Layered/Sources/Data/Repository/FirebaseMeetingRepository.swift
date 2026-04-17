@@ -27,7 +27,6 @@ final class FirebaseMeetingRepository: MeetingRepositoryProtocol {
         let docRef = meetingsRef(familyId: familyId).document()
         try await docRef.setData(data)
 
-        var created = meeting
         return Meeting(
             id: docRef.documentID,
             plannerId: meeting.plannerId,
