@@ -13,112 +13,204 @@ struct SettingsView: View {
     @State private var showFamilyManagement = false
 
     var body: some View {
-        NavigationStack {
-            List {
-                // MARK: - Profile Card
-                Section {
-                    Button(action: { showProfileEdit = true }) {
-                        HStack(spacing: 14) {
-                            AvatarView(
-                                name: appState?.currentUser?.name ?? "사용자",
-                                size: 50,
-                                imageURL: appState?.currentUser?.profileImageURL
-                            )
+        ScrollView {
+            VStack(spacing: 24) {
+                // MARK: - 프로필 헤더
+                VStack(spacing: 14) {
+                    ZStack(alignment: .bottomTrailing) {
+                        AvatarView(
+                            name: appState?.currentUser?.name ?? "사용자",
+                            size: 100,
+                            imageURL: appState?.currentUser?.profileImageURL
+                        )
 
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(appState?.currentUser?.name ?? "사용자")
-                                    .font(.headline)
-                                    .foregroundStyle(.primary)
-                                Text(appState?.currentFamily?.name ?? "")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-
-                            Spacer()
-
-                            Image(systemName: "chevron.right")
+                        Button {
+                            Haptic.light()
+                            showProfileEdit = true
+                        } label: {
+                            Image(systemName: "pencil")
                                 .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(.tertiary)
+                                .fontWeight(.bold)
+                                .foregroundStyle(.white)
+                                .frame(width: 30, height: 30)
+                                .background(Color(.systemGray))
+                                .clipShape(Circle())
+                                .overlay(Circle().stroke(.white, lineWidth: 2))
                         }
-                        .padding(.vertical, 6)
                     }
+
+                    Text(appState?.currentUser?.name ?? "사용자")
+                        .font(.title2)
+                        .fontWeight(.bold)
+
+                    Text(appState?.currentFamily?.name ?? "")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.top, 20)
+
+                // MARK: - 상단 2열 카드
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("FAMILY MEMBERS")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.secondary)
+                        Text("가족")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundStyle(.primary)
+                        Text("\(appState?.members.count ?? 0)명")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(20)
+                    .background(Color(.secondarySystemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("THIS WEEK")
+                            .font(.caption).fontWeight(.bold)
+                            .foregroundStyle(.white)
+                        Text("플래너")
+                            .font(.title3).fontWeight(.bold)
+                            .foregroundStyle(.white)
+                        Text(currentPlannerName)
+                            .font(.subheadline).fontWeight(.semibold)
+                            .foregroundStyle(.white)
+                            .lineLimit(1)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(20)
+                    .background(AppColors.primary)
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                }
+                .fixedSize(horizontal: false, vertical: true)
+
+                // MARK: - 가정 관리 (그룹 카드)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("가정 관리")
+                        .font(.subheadline)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.primary)
+                        .padding(.leading, 4)
+
+                    VStack(spacing: 0) {
+                        groupedRow(icon: "person.crop.circle.fill", title: "구성원 목록") { showMemberList = true }
+                        Divider().padding(.leading, 66)
+                        groupedRow(icon: "person.badge.plus.fill", title: "초대하기") { showInvite = true }
+                        Divider().padding(.leading, 66)
+                        groupedRow(icon: "arrow.triangle.2.circlepath", title: "플래너 설정") { showRotation = true }
+                        Divider().padding(.leading, 66)
+                        groupedRow(icon: "house.fill", title: "가정 관리") { showFamilyManagement = true }
+                    }
+                    .background(Color(.secondarySystemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
                 }
 
-                // MARK: - 가정 관리
-                Section("가정 관리") {
-                    Button(action: { showMemberList = true }) {
-                        settingsRow(icon: "person.3.fill", title: "구성원 목록")
+                // MARK: - 앱 설정 (그룹 카드)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("앱 설정")
+                        .font(.subheadline)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.primary)
+                        .padding(.leading, 4)
+
+                    VStack(spacing: 0) {
+                        groupedRow(icon: "bell.fill", title: "알림 설정") { showNotification = true }
+                        Divider().padding(.leading, 66)
+                        groupedRow(icon: "info.circle.fill", title: "버전 정보", trailing: "v1.0.0") {}
                     }
-                    Button(action: { showInvite = true }) {
-                        settingsRow(icon: "person.badge.plus.fill", title: "초대하기")
-                    }
-                    Button(action: { showRotation = true }) {
-                        settingsRow(icon: "arrow.triangle.2.circlepath", title: "로테이션 순서")
-                    }
-                    Button(action: { showFamilyManagement = true }) {
-                        settingsRow(icon: "house.fill", title: "가정 관리")
-                    }
+                    .background(Color(.secondarySystemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
                 }
 
-                // MARK: - 앱 설정
-                Section("앱 설정") {
-                    Button(action: { showNotification = true }) {
-                        settingsRow(icon: "bell.fill", title: "알림 설정")
-                    }
+                // MARK: - 계정 관리
+                Button {
+                    Haptic.light()
+                    showAccount = true
+                } label: {
+                    Text("계정 관리")
+                        .font(.subheadline)
+                        .foregroundStyle(Color(.darkGray))
                 }
-
-                // MARK: - 계정
-                Section {
-                    Button(action: { showAccount = true }) {
-                        settingsRow(icon: "person.crop.circle.fill", title: "계정 관리")
-                    }
-                }
+                .buttonStyle(.plain)
+                .padding(.top, 8)
+                .padding(.bottom, 32)
             }
-            .navigationTitle("설정")
-            .id(refreshId)
-            .fullScreenCover(isPresented: $showProfileEdit) {
-                ProfileEditView(onBack: {
-                    showProfileEdit = false
-                    refreshId = UUID()
-                })
+            .padding(.horizontal, 20)
+        }
+        .id(refreshId)
+        .fullScreenCover(isPresented: $showProfileEdit) {
+            ProfileEditView(onBack: {
+                showProfileEdit = false
+                refreshId = UUID()
+            })
+            .environment(appState)
+        }
+        .fullScreenCover(isPresented: $showMemberList) {
+            MemberListView(onBack: { showMemberList = false })
                 .environment(appState)
-            }
-            .fullScreenCover(isPresented: $showMemberList) {
-                MemberListView(onBack: { showMemberList = false })
-                    .environment(appState)
-            }
-            .fullScreenCover(isPresented: $showInvite) {
-                InviteMemberView(onBack: { showInvite = false })
-                    .environment(appState)
-            }
-            .fullScreenCover(isPresented: $showRotation) {
-                RotationOrderView(onBack: { showRotation = false })
-                    .environment(appState)
-            }
-            .fullScreenCover(isPresented: $showNotification) {
-                NotificationSettingsView(onBack: { showNotification = false })
-            }
-            .fullScreenCover(isPresented: $showAccount) {
-                AccountView(onBack: { showAccount = false })
-                    .environment(appState)
-            }
-            .fullScreenCover(isPresented: $showFamilyManagement) {
-                FamilyManagementView(onBack: { showFamilyManagement = false })
-                    .environment(appState)
-            }
+        }
+        .fullScreenCover(isPresented: $showInvite) {
+            InviteMemberView(onBack: { showInvite = false })
+                .environment(appState)
+        }
+        .fullScreenCover(isPresented: $showRotation) {
+            RotationOrderView(onBack: { showRotation = false })
+                .environment(appState)
+        }
+        .fullScreenCover(isPresented: $showNotification) {
+            NotificationSettingsView(onBack: { showNotification = false })
+        }
+        .fullScreenCover(isPresented: $showAccount) {
+            AccountView(onBack: { showAccount = false })
+                .environment(appState)
+        }
+        .fullScreenCover(isPresented: $showFamilyManagement) {
+            FamilyManagementView(onBack: { showFamilyManagement = false })
+                .environment(appState)
         }
     }
 
-    private func settingsRow(icon: String, title: String) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.body)
-                .foregroundStyle(AppColors.primary)
-                .frame(width: 24, height: 24, alignment: .center)
-            Text(title)
-                .foregroundStyle(.primary)
+    private func groupedRow(icon: String, title: String, trailing: String? = nil, action: @escaping () -> Void) -> some View {
+        Button {
+            Haptic.light()
+            action()
+        } label: {
+            HStack(spacing: 14) {
+                Image(systemName: icon)
+                    .font(.body)
+                    .foregroundStyle(AppColors.primary)
+                    .frame(width: 36, height: 36)
+                    .background(.white)
+                    .clipShape(Circle())
+
+                Text(title)
+                    .font(.subheadline).fontWeight(.medium)
+                    .foregroundStyle(.primary)
+
+                Spacer()
+
+                if let trailing {
+                    Text(trailing).font(.caption).foregroundStyle(.secondary)
+                }
+                Image(systemName: "chevron.right")
+                    .font(.caption).foregroundStyle(.tertiary)
+            }
+            .padding(16)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Helpers
+    private var currentPlannerName: String {
+        guard let members = appState?.members,
+              let family = appState?.currentFamily,
+              family.currentPlannerIndex < members.count else { return "미정" }
+        return members[family.currentPlannerIndex].name
     }
 }
 
