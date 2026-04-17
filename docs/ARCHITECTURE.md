@@ -71,6 +71,7 @@ users/{uid}
 | memberCount | Int | 현재 구성원 수 |
 | currentPlannerIndex | Int | 현재 플래너 순번 |
 | rotationDay | Int | 로테이션 기준요일 (1=월~7=일) |
+| rotationMode | String | 로테이션 방식 ("auto" \| "manual") |
 | createdAt | Date | 생성일 |
 
 ### Member — families/{familyId}/members/{memberId}
@@ -93,7 +94,8 @@ users/{uid}
 | place | String | 장소명 |
 | placeLatitude | Double? | 위도 |
 | placeLongitude | Double? | 경도 |
-| activity | String? | 활동 내용 |
+| placeURL | String? | 장소 링크 (네이버지도/카카오맵 등) |
+| activity | String? | 활동 내용 (프리셋 다중 선택은 ", "로 결합) |
 | status | enum | planning / confirmed / completed / cancelled |
 | hasPoll | Bool | 투표 존재 여부 |
 | createdAt | Date | 생성일 |
@@ -106,10 +108,10 @@ users/{uid}
 | question | String | 투표 질문 |
 | isAnonymous | Bool | 익명 투표 여부 |
 | allowMultiple | Bool | 복수 선택 가능 |
-| deadline | Date | 마감 시간 |
-| status | enum | open / closed |
 | options | [PollOption] | 선택지 배열 (문서 내 배열) |
 | createdAt | Date | 생성일 |
+
+> **참고**: 초기 기획에 있던 `deadline`/`status` 필드는 Phase 3에서 "투표 마감 기능 불필요"로 판단되어 제거됨.
 
 ### PollOption — Poll.options 배열 내 객체
 | 필드 | 타입 | 설명 |
@@ -117,6 +119,7 @@ users/{uid}
 | id | String | 선택지 ID |
 | title | String | 선택지 제목 |
 | description | String? | 설명 |
+| imageURL | String? | 선택지 이미지 URL (선택) |
 | voterIds | [String] | 투표자 UID 목록 (익명시 빈 배열) |
 | voteCount | Int | 투표 수 |
 
