@@ -24,6 +24,7 @@ struct FamilyManagementView: View {
             VStack(spacing: 0) {
                 // 가정 이름 변경
                 Button(action: {
+                    Haptic.light()
                     newFamilyName = appState?.currentFamily?.name ?? ""
                     showRenameAlert = true
                 }) {
@@ -41,13 +42,16 @@ struct FamilyManagementView: View {
                             .foregroundStyle(.secondary)
                     }
                     .padding(16)
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
 
                 Divider()
                     .padding(.leading, 44)
 
                 // 나가기 버튼
                 Button(action: {
+                    Haptic.light()
                     showLeaveAlert = true
                 }) {
                     HStack(spacing: 12) {
@@ -60,7 +64,9 @@ struct FamilyManagementView: View {
                         Spacer()
                     }
                     .padding(16)
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
 
                 Divider()
                     .padding(.leading, 44)
@@ -68,6 +74,7 @@ struct FamilyManagementView: View {
                 // 삭제 버튼 (관리자만)
                 if isAdmin {
                     Button(action: {
+                        Haptic.light()
                         showDeleteAlert = true
                     }) {
                         HStack(spacing: 12) {
@@ -80,7 +87,9 @@ struct FamilyManagementView: View {
                             Spacer()
                         }
                         .padding(16)
+                        .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
                 }
             }
             .background(Color(.secondarySystemBackground))
@@ -116,6 +125,7 @@ struct FamilyManagementView: View {
         } message: {
             Text("모든 데이터가 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.")
         }
+        .swipeBack(onBack: onBack)
     }
 }
 
