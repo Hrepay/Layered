@@ -7,6 +7,7 @@ struct MeetingDetailView: View {
     let onBack: () -> Void
     var onDeleted: (() -> Void)?
     var onUpdated: (() -> Void)?
+    var showsActionMenu: Bool = true
 
     @Environment(AppState.self) private var appState: AppState
 
@@ -16,11 +17,28 @@ struct MeetingDetailView: View {
     @State private var poll: Poll?
     @State private var linkMetadata: LPLinkMetadata?
 
-    init(meeting: Meeting, onBack: @escaping () -> Void, onDeleted: (() -> Void)? = nil, onUpdated: (() -> Void)? = nil) {
+    init(meeting: Meeting, onBack: @escaping () -> Void, onDeleted: (() -> Void)? = nil, onUpdated: (() -> Void)? = nil, showsActionMenu: Bool = true) {
         _meeting = State(initialValue: meeting)
         self.onBack = onBack
         self.onDeleted = onDeleted
         self.onUpdated = onUpdated
+        self.showsActionMenu = showsActionMenu
+    }
+
+    private var actionMenu: AnyView? {
+        guard showsActionMenu else { return nil }
+        return AnyView(
+            Menu {
+                Button("수정", systemImage: "pencil") { showEdit = true }
+                Button("삭제", systemImage: "trash", role: .destructive) {
+                    showDeleteAlert = true
+                }
+            } label: {
+                Image(systemName: "ellipsis.circle")
+                    .font(.title3)
+                    .foregroundStyle(.primary)
+            }
+        )
     }
 
     var body: some View {
@@ -28,18 +46,7 @@ struct MeetingDetailView: View {
             NavBar(
                 title: "모임 상세",
                 backAction: onBack,
-                trailingMenu: AnyView(
-                    Menu {
-                        Button("수정", systemImage: "pencil") { showEdit = true }
-                        Button("삭제", systemImage: "trash", role: .destructive) {
-                            showDeleteAlert = true
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                            .font(.title3)
-                            .foregroundStyle(.primary)
-                    }
-                )
+                trailingMenu: actionMenu
             )
 
             ScrollView {

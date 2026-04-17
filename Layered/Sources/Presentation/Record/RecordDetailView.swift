@@ -13,6 +13,7 @@ struct RecordDetailView: View {
     @State private var recordToDelete: MeetingRecord?
     @State private var showCreateRecord = false
     @State private var fullScreenImageURL: String?
+    @State private var showMeetingDetail = false
 
     private var hasMyRecord: Bool {
         guard let userId = appState.currentUser?.id else { return false }
@@ -50,24 +51,35 @@ struct RecordDetailView: View {
 
             ScrollView {
                 VStack(spacing: 16) {
-                    // MARK: - 모임 요약 카드
-                    HStack(spacing: 12) {
-                        Image(systemName: "mappin.circle.fill")
-                            .font(.title2)
-                            .foregroundStyle(AppColors.primary)
+                    // MARK: - 모임 요약 카드 (탭하면 모임 상세)
+                    Button {
+                        Haptic.light()
+                        showMeetingDetail = true
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "mappin.circle.fill")
+                                .font(.title2)
+                                .foregroundStyle(AppColors.primary)
 
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(meeting.place)
-                                .font(.headline)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(meeting.place)
+                                    .font(.headline)
+                                    .foregroundStyle(.primary)
 
-                            Text(formatDate(meeting.meetingDate))
+                                Text(formatDate(meeting.meetingDate))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(.tertiary)
                         }
-
-                        Spacer()
+                        .card()
                     }
-                    .card()
+                    .buttonStyle(.plain)
 
                     // MARK: - 구성원별 기록
                     if records.isEmpty {
@@ -176,6 +188,14 @@ struct RecordDetailView: View {
         }
         .task {
             await loadRecords()
+        }
+        .fullScreenCover(isPresented: $showMeetingDetail) {
+            MeetingDetailView(
+                meeting: meeting,
+                onBack: { showMeetingDetail = false },
+                showsActionMenu: false
+            )
+            .environment(appState)
         }
         .fullScreenCover(isPresented: $showCreateRecord) {
             CreateRecordView(meeting: meeting, onBack: {

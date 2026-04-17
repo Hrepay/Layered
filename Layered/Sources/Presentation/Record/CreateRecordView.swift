@@ -13,6 +13,7 @@ struct CreateRecordView: View {
     @State private var animatedStar: Int? = nil
     @State private var showImagePicker = false
     @State private var isUploading = false
+    @FocusState private var commentFocused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -61,6 +62,7 @@ struct CreateRecordView: View {
                 trailingDisabled: !isValid || isUploading
             )
 
+            ScrollViewReader { proxy in
             ScrollView {
                 VStack(spacing: 24) {
                     // MARK: - 모임 요약 카드
@@ -188,16 +190,34 @@ struct CreateRecordView: View {
                             .scrollContentBackground(.hidden)
                             .background(Color(.secondarySystemBackground))
                             .clipShape(RoundedRectangle(cornerRadius: 14))
+                            .focused($commentFocused)
+                            .id("comment")
                             .onChange(of: comment) { _, newValue in
                                 if newValue.count > 1000 {
                                     comment = String(newValue.prefix(1000))
                                 }
                             }
                     }
+                    .id("commentSection")
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
                 .padding(.bottom, 40)
+            }
+            .onChange(of: commentFocused) { _, focused in
+                if focused {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        proxy.scrollTo("commentSection", anchor: .bottom)
+                    }
+                }
+            }
+            .onChange(of: comment) { _, _ in
+                if commentFocused {
+                    withAnimation(.easeOut(duration: 0.15)) {
+                        proxy.scrollTo("commentSection", anchor: .bottom)
+                    }
+                }
+            }
             }
         }
         .loadingOverlay(isUploading)
