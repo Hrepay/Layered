@@ -12,15 +12,12 @@ struct LoginView: View {
 
             // 로고 섹션
             VStack(spacing: 16) {
-                ZStack {
-                    Circle()
-                        .fill(AppColors.primarySubtle)
-                        .frame(width: 100, height: 100)
-
-                    Image(systemName: "person.3.fill")
-                        .font(.system(size: 40))
-                        .foregroundStyle(AppColors.primary)
-                }
+                Image("AppLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 100, height: 100)
+                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                    .shadow(color: .black.opacity(0.08), radius: 12, x: 0, y: 4)
 
                 Text("겹겹")
                     .font(.system(size: 32, weight: .bold))
