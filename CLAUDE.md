@@ -70,4 +70,6 @@
   - 4-A: UI/UX 전면 개선 ✅ (홈/모임/설정/가정관리/계정관리 리디자인, 스플래시 애니메이션, 스와이프 백, 링크 미리보기, pull-to-refresh)
   - 4-B: 버그 수정 ✅ (프로필 이미지 동기화, 수동 모드 플래너, 링크 캐시, 프로필 저장)
   - 4-C: 알림 설정 연동 ✅ (3개 토글 Firestore 저장 + iOS 권한 체크 + Cloud Functions 배포)
-  - 4-D: 출시 준비 (진행 중) — 앱 아이콘 ✅ / Storage 규칙, 약관, 스크린샷, TestFlight, 심사 제출 대기
+  - 4-D: UX 품질 개선 ✅ (전역 에러 처리 AppError, 빈 상태 통일, 글로벌 키보드 dismiss, URL 자동 추출)
+  - 4-E: 아키텍처 정리 ✅ (AppState에서 Firebase 직접 호출 제거, Optional AppState 통일, ImageProcessor 분리, iPhone 세로 전용)
+  - 4-F: 출시 준비 (진행 중) — 앱 아이콘 ✅ / Storage 규칙, 약관, 스크린샷, TestFlight, 심사 제출 대기
