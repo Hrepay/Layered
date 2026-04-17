@@ -39,7 +39,7 @@ struct RotationOrderView: View {
             NavBar(
                 title: "플래너 설정",
                 backAction: onBack,
-                trailingText: "저장",
+                trailingText: "완료",
                 trailingAction: {
                     Haptic.light()
                     saveSettings()

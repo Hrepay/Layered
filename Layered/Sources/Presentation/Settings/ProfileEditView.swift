@@ -14,7 +14,7 @@ struct ProfileEditView: View {
             NavBar(
                 title: "프로필 수정",
                 backAction: onBack,
-                trailingText: "저장",
+                trailingText: "완료",
                 trailingAction: {
                     Haptic.medium()
                     

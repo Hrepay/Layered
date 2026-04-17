@@ -13,7 +13,7 @@ struct CreatePollView: View {
             NavBar(
                 title: "투표 만들기",
                 backAction: onBack,
-                trailingText: "만들기",
+                trailingText: "완료",
                 trailingAction: {
                     Haptic.medium()
                     let pollOptions = options.enumerated().compactMap { index, title -> PollOption? in

@@ -36,6 +36,7 @@ struct CreateMeetingView: View {
     @State private var createdPoll: Poll?
     @State private var linkMetadata: LPLinkMetadata?
     @State private var isLoadingLink = false
+    @State private var showExitAlert = false
 
     private var finalActivity: String? {
         let presetLabels = selectedPresets.map(\.label)
@@ -47,8 +48,8 @@ struct CreateMeetingView: View {
         VStack(spacing: 0) {
             NavBar(
                 title: "모임 계획하기",
-                backAction: onBack,
-                trailingText: "등록",
+                backAction: { showExitAlert = true },
+                trailingText: "완료",
                 trailingAction: {
                     Haptic.medium()
                     let meeting = Meeting(
@@ -214,6 +215,12 @@ struct CreateMeetingView: View {
                 showPollCreation = false
             })
             .environment(appState)
+        }
+        .alert("저장되지 않아요", isPresented: $showExitAlert) {
+            Button("취소", role: .cancel) {}
+            Button("나가기", role: .destructive) { onBack() }
+        } message: {
+            Text("지금 나가면 입력한 내용이 저장되지 않습니다.")
         }
     }
 

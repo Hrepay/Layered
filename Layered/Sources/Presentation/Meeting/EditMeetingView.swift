@@ -50,7 +50,7 @@ struct EditMeetingView: View {
             NavBar(
                 title: "모임 수정",
                 backAction: onBack,
-                trailingText: "저장",
+                trailingText: "완료",
                 trailingAction: {
                     Haptic.medium()
                     if date < Date() {

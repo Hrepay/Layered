@@ -19,7 +19,7 @@ struct CreateRecordView: View {
             NavBar(
                 title: "모임 기록",
                 backAction: onBack,
-                trailingText: "저장",
+                trailingText: "완료",
                 trailingAction: {
                     Haptic.medium()
                     isUploading = true
