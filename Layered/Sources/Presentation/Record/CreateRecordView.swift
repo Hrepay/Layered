@@ -5,7 +5,7 @@ struct CreateRecordView: View {
     let onBack: () -> Void
     let onSaved: (MeetingRecord) -> Void
 
-    @Environment(AppState.self) private var appState: AppState?
+    @Environment(AppState.self) private var appState: AppState
 
     @State private var comment = ""
     @State private var rating = 0
@@ -27,9 +27,9 @@ struct CreateRecordView: View {
                     Task {
                         do {
                             var photoURLs: [String] = []
-                            if let appState, let familyId = appState.currentFamily?.id {
+                            if let familyId = appState.currentFamily?.id {
                                 for (index, image) in selectedImages.enumerated() {
-                                    guard let data = FirebaseStorageRepository.resizeAndCompress(image) else { continue }
+                                    guard let data = ImageProcessor.resizeAndCompress(image) else { continue }
                                     let url = try await appState.storageRepository.uploadRecordPhoto(
                                         familyId: familyId,
                                         meetingId: meeting.id,
@@ -42,8 +42,8 @@ struct CreateRecordView: View {
                             }
                             let record = MeetingRecord(
                                 id: recordId,
-                                memberId: appState?.currentUser?.id ?? "",
-                                memberName: appState?.currentUser?.name ?? "",
+                                memberId: appState.currentUser?.id ?? "",
+                                memberName: appState.currentUser?.name ?? "",
                                 photos: photoURLs,
                                 comment: comment,
                                 rating: rating,
@@ -54,7 +54,7 @@ struct CreateRecordView: View {
                             onSaved(record)
                         } catch {
                             isUploading = false
-                            appState?.error = AppError.from(error)
+                            appState.error = AppError.from(error)
                         }
                     }
                 },
