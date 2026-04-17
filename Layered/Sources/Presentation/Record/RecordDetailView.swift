@@ -98,7 +98,11 @@ struct RecordDetailView: View {
                         ForEach(records) { record in
                             VStack(alignment: .leading, spacing: 12) {
                                 HStack(spacing: 10) {
-                                    AvatarView(name: record.memberName, size: 36)
+                                    AvatarView(
+                                        name: record.memberName,
+                                        size: 36,
+                                        imageURL: appState.members.first(where: { $0.id == record.memberId })?.profileImageURL
+                                    )
 
                                     Text(record.memberName)
                                         .font(.subheadline)
