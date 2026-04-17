@@ -3,7 +3,7 @@ import UserNotifications
 
 struct NotificationSettingsView: View {
     let onBack: () -> Void
-    @Environment(AppState.self) private var appState: AppState?
+    @Environment(AppState.self) private var appState: AppState
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var systemAuthorized = true
@@ -86,7 +86,7 @@ struct NotificationSettingsView: View {
         .task {
             await refreshPermissionStatus()
             guard !isLoaded else { return }
-            let settings = await appState?.loadNotificationSettings() ?? (enabled: true, plannerReminder: true, meetingCreated: true)
+            let settings = await appState.loadNotificationSettings() ?? NotificationSettings()
             notificationsEnabled = settings.enabled
             plannerReminder = settings.plannerReminder
             meetingCreated = settings.meetingCreated
@@ -103,10 +103,12 @@ struct NotificationSettingsView: View {
     private func save() {
         guard isLoaded else { return }
         Task {
-            await appState?.updateNotificationSettings(
-                enabled: notificationsEnabled,
-                plannerReminder: plannerReminder,
-                meetingCreated: meetingCreated
+            await appState.updateNotificationSettings(
+                NotificationSettings(
+                    enabled: notificationsEnabled,
+                    plannerReminder: plannerReminder,
+                    meetingCreated: meetingCreated
+                )
             )
         }
     }

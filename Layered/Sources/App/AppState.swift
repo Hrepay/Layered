@@ -1,7 +1,6 @@
 import SwiftUI
 import UIKit
 import FirebaseAuth
-import FirebaseFirestore
 
 enum AuthState: Equatable {
     case splash
@@ -269,17 +268,16 @@ final class AppState {
             var loadedMembers = try await memberRepository.getMembers(familyId: familyId)
 
             // members 서브컬렉션의 profileImageURL이 누락된 경우 users에서 동기화
-            let db = FirebaseFirestore.Firestore.firestore()
             for i in loadedMembers.indices {
                 if loadedMembers[i].profileImageURL == nil {
-                    let userDoc = try? await db.collection("users").document(loadedMembers[i].id).getDocument()
-                    if let userData = userDoc?.data(),
-                       let imageURL = userData["profileImageURL"] as? String {
+                    if let user = try? await userRepository.getUser(id: loadedMembers[i].id),
+                       let imageURL = user.profileImageURL {
                         loadedMembers[i].profileImageURL = imageURL
-                        // Firestore members에도 반영
-                        try? await db.collection("families").document(familyId)
-                            .collection("members").document(loadedMembers[i].id)
-                            .updateData(["profileImageURL": imageURL])
+                        try? await memberRepository.syncMemberProfileImage(
+                            familyId: familyId,
+                            memberId: loadedMembers[i].id,
+                            imageURL: imageURL
+                        )
                     }
                 }
             }
@@ -430,41 +428,27 @@ final class AppState {
     @MainActor
     func updateRotationMode(_ mode: String) async throws {
         guard let familyId = currentFamily?.id else { throw AppStateError.noFamily }
-        let db = FirebaseFirestore.Firestore.firestore()
-        try await db.collection("families").document(familyId).updateData(["rotationMode": mode])
+        try await familyRepository.updateRotationMode(familyId: familyId, mode: mode)
         currentFamily?.rotationMode = mode
     }
 
     // MARK: - 알림 설정
     @MainActor
-    func loadNotificationSettings() async -> (enabled: Bool, plannerReminder: Bool, meetingCreated: Bool) {
-        guard let userId = currentUser?.id else { return (true, true, true) }
-        let db = FirebaseFirestore.Firestore.firestore()
-        let doc = try? await db.collection("users").document(userId).getDocument()
-        let data = doc?.data()
-        return (
-            enabled: data?["notificationsEnabled"] as? Bool ?? true,
-            plannerReminder: data?["notifyPlannerReminder"] as? Bool ?? true,
-            meetingCreated: data?["notifyMeetingCreated"] as? Bool ?? true
-        )
+    func loadNotificationSettings() async -> NotificationSettings {
+        guard let userId = currentUser?.id else { return NotificationSettings() }
+        return (try? await userRepository.loadNotificationSettings(userId: userId)) ?? NotificationSettings()
     }
 
     @MainActor
-    func updateNotificationSettings(enabled: Bool, plannerReminder: Bool, meetingCreated: Bool) async {
+    func updateNotificationSettings(_ settings: NotificationSettings) async {
         guard let userId = currentUser?.id else { return }
-        let db = FirebaseFirestore.Firestore.firestore()
-        try? await db.collection("users").document(userId).updateData([
-            "notificationsEnabled": enabled,
-            "notifyPlannerReminder": plannerReminder,
-            "notifyMeetingCreated": meetingCreated,
-        ])
+        try? await userRepository.updateNotificationSettings(userId: userId, settings: settings)
     }
 
     @MainActor
     func updateCurrentPlannerIndex(_ index: Int) async throws {
         guard let familyId = currentFamily?.id else { throw AppStateError.noFamily }
-        let db = FirebaseFirestore.Firestore.firestore()
-        try await db.collection("families").document(familyId).updateData(["currentPlannerIndex": index])
+        try await familyRepository.updateCurrentPlannerIndex(familyId: familyId, index: index)
         currentFamily?.currentPlannerIndex = index
     }
 
@@ -478,13 +462,12 @@ final class AppState {
 
         // members 서브컬렉션도 동기화 (실패해도 저장은 성공으로 처리)
         if let familyId = currentFamily?.id {
-            let db = FirebaseFirestore.Firestore.firestore()
-            try? await db.collection("families").document(familyId)
-                .collection("members").document(user.id)
-                .updateData([
-                    "name": name,
-                    "profileImageURL": profileImageURL as Any,
-                ])
+            try? await memberRepository.updateMemberProfile(
+                familyId: familyId,
+                memberId: user.id,
+                name: name,
+                profileImageURL: profileImageURL
+            )
             await refreshMembers()
         }
     }
@@ -492,7 +475,7 @@ final class AppState {
     // MARK: - 프로필 사진 업로드
     func uploadProfileImage(_ image: UIImage) async throws {
         guard var user = currentUser else { return }
-        guard let data = FirebaseStorageRepository.resizeAndCompress(image, maxSize: 256, quality: 0.5) else { return }
+        guard let data = ImageProcessor.resizeAndCompress(image, maxSize: 256, quality: 0.5) else { return }
         let url = try await storageRepository.uploadProfileImage(userId: user.id, imageData: data)
         user.profileImageURL = url
         try await userRepository.updateUser(user)

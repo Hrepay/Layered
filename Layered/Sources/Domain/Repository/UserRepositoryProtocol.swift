@@ -1,7 +1,15 @@
 import Foundation
 
+struct NotificationSettings: Equatable {
+    var enabled: Bool = true
+    var plannerReminder: Bool = true
+    var meetingCreated: Bool = true
+}
+
 protocol UserRepositoryProtocol {
     func getUser(id: String) async throws -> User
     func createUserIfNeeded(_ user: User) async throws
     func updateUser(_ user: User) async throws
+    func loadNotificationSettings(userId: String) async throws -> NotificationSettings
+    func updateNotificationSettings(userId: String, settings: NotificationSettings) async throws
 }

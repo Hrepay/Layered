@@ -35,6 +35,24 @@ final class FirebaseUserRepository: UserRepositoryProtocol {
         ])
     }
 
+    func loadNotificationSettings(userId: String) async throws -> NotificationSettings {
+        let doc = try await usersRef.document(userId).getDocument()
+        let data = doc.data() ?? [:]
+        return NotificationSettings(
+            enabled: data["notificationsEnabled"] as? Bool ?? true,
+            plannerReminder: data["notifyPlannerReminder"] as? Bool ?? true,
+            meetingCreated: data["notifyMeetingCreated"] as? Bool ?? true
+        )
+    }
+
+    func updateNotificationSettings(userId: String, settings: NotificationSettings) async throws {
+        try await usersRef.document(userId).updateData([
+            "notificationsEnabled": settings.enabled,
+            "notifyPlannerReminder": settings.plannerReminder,
+            "notifyMeetingCreated": settings.meetingCreated,
+        ])
+    }
+
     // MARK: - Helper
     private func userFromData(id: String, data: [String: Any]) -> User {
         User(

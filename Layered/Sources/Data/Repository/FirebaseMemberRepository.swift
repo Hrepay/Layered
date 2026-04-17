@@ -48,6 +48,19 @@ final class FirebaseMemberRepository: MemberRepositoryProtocol {
         try await batch.commit()
     }
 
+    func syncMemberProfileImage(familyId: String, memberId: String, imageURL: String) async throws {
+        try await membersRef(familyId: familyId).document(memberId).updateData([
+            "profileImageURL": imageURL
+        ])
+    }
+
+    func updateMemberProfile(familyId: String, memberId: String, name: String, profileImageURL: String?) async throws {
+        try await membersRef(familyId: familyId).document(memberId).updateData([
+            "name": name,
+            "profileImageURL": profileImageURL as Any,
+        ])
+    }
+
     // MARK: - Helpers
     private func memberFromDoc(_ doc: QueryDocumentSnapshot) -> Member {
         memberFromData(id: doc.documentID, data: doc.data())

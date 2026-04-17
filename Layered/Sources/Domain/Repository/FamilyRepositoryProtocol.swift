@@ -8,4 +8,6 @@ protocol FamilyRepositoryProtocol {
     func generateInviteCode(familyId: String) async throws -> String
     func verifyInviteCode(inviteCode: String) async throws -> Family
     func joinFamily(familyId: String, userId: String, userName: String) async throws
+    func updateRotationMode(familyId: String, mode: String) async throws
+    func updateCurrentPlannerIndex(familyId: String, index: Int) async throws
 }

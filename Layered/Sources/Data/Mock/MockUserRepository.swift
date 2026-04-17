@@ -8,4 +8,10 @@ final class MockUserRepository: UserRepositoryProtocol {
     func createUserIfNeeded(_ user: User) async throws {}
 
     func updateUser(_ user: User) async throws {}
+
+    func loadNotificationSettings(userId: String) async throws -> NotificationSettings {
+        NotificationSettings()
+    }
+
+    func updateNotificationSettings(userId: String, settings: NotificationSettings) async throws {}
 }
