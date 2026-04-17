@@ -10,6 +10,6 @@
 
 ## 개발자 연락처
 
-- **개발자**: 황상환 (Hwang Sang Hwan)
-- **이메일**: chatsea_dev1@chatsea.net
+- **Developer**: Hwang Sang Hwan
+- **Email**: dbrdldh11@naver.com
 - **GitHub**: [github.com/Hrepay/Layered](https://github.com/Hrepay/Layered)
