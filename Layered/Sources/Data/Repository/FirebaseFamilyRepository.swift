@@ -127,9 +127,18 @@ final class FirebaseFamilyRepository: FamilyRepositoryProtocol {
         try await db.collection("users").document(userId).updateData(["familyId": familyId])
     }
 
+    func updateRotationMode(familyId: String, mode: String) async throws {
+        try await familiesRef.document(familyId).updateData(["rotationMode": mode])
+    }
+
+    func updateCurrentPlannerIndex(familyId: String, index: Int) async throws {
+        try await familiesRef.document(familyId).updateData(["currentPlannerIndex": index])
+    }
+
     // MARK: - Helpers
     private func generateCode() -> String {
-        String((0..<6).map { _ in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".randomElement()! })
+        let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        return String((0..<6).map { _ in chars.randomElement() ?? "0" })
     }
 
     private func familyFromData(id: String, data: [String: Any]) -> Family {
