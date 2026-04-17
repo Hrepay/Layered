@@ -125,8 +125,9 @@ struct LoginView: View {
                     pendingAction = nil
                 }
             )
-            .presentationDetents([.large])
+            .presentationDetents([.height(520)])
             .presentationDragIndicator(.hidden)
+            .presentationCornerRadius(24)
         }
     }
 }
