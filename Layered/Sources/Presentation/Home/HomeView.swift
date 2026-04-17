@@ -223,7 +223,7 @@ struct HomeView: View {
             if meetingLinkMetadata != nil || meeting.placeURL != nil {
                 ZStack(alignment: .topLeading) {
                     if let metadata = meetingLinkMetadata {
-                        LinkPreviewCard(metadata: metadata)
+                        LinkPreviewImage(metadata: metadata)
                             .frame(height: 200)
                             .frame(maxWidth: .infinity)
                             .clipped()

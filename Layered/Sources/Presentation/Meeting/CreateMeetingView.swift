@@ -265,7 +265,34 @@ struct CreateMeetingView: View {
     }
 }
 
-// MARK: - 링크 미리보기 (LPLinkView 래핑)
+// MARK: - 홈 카드 전용 이미지 미리보기 (LPLinkMetadata에서 이미지만 추출)
+struct LinkPreviewImage: View {
+    let metadata: LPLinkMetadata
+    @State private var image: UIImage?
+
+    var body: some View {
+        ZStack {
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Color(.systemGray5)
+            }
+        }
+        .task(id: metadata.originalURL) {
+            guard let provider = metadata.imageProvider else { return }
+            let loaded: UIImage? = await withCheckedContinuation { continuation in
+                provider.loadObject(ofClass: UIImage.self) { object, _ in
+                    continuation.resume(returning: object as? UIImage)
+                }
+            }
+            await MainActor.run { self.image = loaded }
+        }
+    }
+}
+
+// MARK: - 링크 미리보기 (LPLinkView 래핑 — 타이틀·도메인 포함 리치 프리뷰)
 struct LinkPreviewCard: UIViewRepresentable {
     let metadata: LPLinkMetadata
 
