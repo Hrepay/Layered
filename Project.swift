@@ -23,7 +23,7 @@ let project = Project(
                         "UIColorName": "",
                         "UIImageName": "",
                     ],
-                    "NSPhotoLibraryAddUsageDescription": "모임 사진을 기기에 저장하기 위해 사진첩 접근이 필요합니다.",
+                    "NSPhotoLibraryAddUsageDescription": "모임 기록에 첨부된 사진을 사진첩에 저장하려면 접근 권한이 필요합니다. 가족이 함께한 순간을 원본 그대로 기기에 보관할 수 있어요.",
                     "UISupportedInterfaceOrientations": [
                         "UIInterfaceOrientationPortrait",
                     ],
