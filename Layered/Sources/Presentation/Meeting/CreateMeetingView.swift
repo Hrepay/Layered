@@ -44,11 +44,25 @@ struct CreateMeetingView: View {
         return combined.isEmpty ? nil : combined.joined(separator: ", ")
     }
 
+    private var hasUnsavedChanges: Bool {
+        !place.isEmpty
+            || !placeURL.isEmpty
+            || !activity.isEmpty
+            || !selectedPresets.isEmpty
+            || hasPoll
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             NavBar(
                 title: "모임 계획하기",
-                backAction: { showExitAlert = true },
+                backAction: {
+                    if hasUnsavedChanges {
+                        showExitAlert = true
+                    } else {
+                        onBack()
+                    }
+                },
                 trailingText: "완료",
                 trailingAction: {
                     Haptic.medium()
