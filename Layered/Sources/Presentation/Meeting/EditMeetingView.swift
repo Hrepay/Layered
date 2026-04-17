@@ -13,6 +13,7 @@ struct EditMeetingView: View {
     @State private var selectedPresets: Set<ActivityPreset> = []
     @State private var linkMetadata: LPLinkMetadata?
     @State private var isLoadingLink = false
+    @State private var showPastDateAlert = false
 
     private var finalActivity: String? {
         let presetLabels = selectedPresets.map(\.label)
@@ -52,13 +53,11 @@ struct EditMeetingView: View {
                 trailingText: "저장",
                 trailingAction: {
                     Haptic.medium()
-                    var updated = meeting
-                    updated.meetingDate = date
-                    updated.place = place
-                    updated.placeURL = placeURL.isEmpty ? nil : placeURL
-                    updated.activity = finalActivity
-                    updated.updatedAt = Date()
-                    onSaved(updated)
+                    if date < Date() {
+                        showPastDateAlert = true
+                    } else {
+                        performSave()
+                    }
                 },
                 trailingDisabled: place.isEmpty
             )
@@ -170,6 +169,22 @@ struct EditMeetingView: View {
             }
         }
         .swipeBack(onBack: onBack)
+        .alert("이미 지난 시점이에요", isPresented: $showPastDateAlert) {
+            Button("취소", role: .cancel) {}
+            Button("저장") { performSave() }
+        } message: {
+            Text("선택한 일시가 현재 시점보다 과거입니다.\n저장하면 이 모임은 바로 완료된 모임으로 표시됩니다.")
+        }
+    }
+
+    private func performSave() {
+        var updated = meeting
+        updated.meetingDate = date
+        updated.place = place
+        updated.placeURL = placeURL.isEmpty ? nil : placeURL
+        updated.activity = finalActivity
+        updated.updatedAt = Date()
+        onSaved(updated)
     }
 
     private func handlePlaceURLChange(_ newValue: String) {
