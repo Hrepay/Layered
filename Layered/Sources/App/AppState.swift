@@ -1,6 +1,8 @@
 import SwiftUI
 import UIKit
 import FirebaseAuth
+import FirebaseMessaging
+import FirebaseFirestore
 
 enum AuthState: Equatable {
     case splash
@@ -145,6 +147,8 @@ final class AppState {
 
     @MainActor
     private func resolveAuthState(uid: String) async -> AuthState {
+        await refreshFCMToken(uid: uid)
+
         do {
             let user = try await userRepository.getUser(id: uid)
             currentUser = user
@@ -168,6 +172,20 @@ final class AppState {
             try? await userRepository.createUserIfNeeded(newUser)
             currentUser = newUser
             return .familySetup
+        }
+    }
+
+    // 로그인 확정 시점에 현재 FCM 토큰을 Firestore로 동기화.
+    // AppDelegate의 didReceiveRegistrationToken이 로그인 이전에 발화해서 유실되는 경우와
+    // 번들 ID 변경 후 옛 토큰이 남아있는 경우를 모두 방어.
+    private func refreshFCMToken(uid: String) async {
+        do {
+            let token = try await Messaging.messaging().token()
+            try await Firestore.firestore()
+                .collection("users").document(uid)
+                .updateData(["fcmToken": token])
+        } catch {
+            // 실패해도 앱 사용은 계속 가능하므로 무시
         }
     }
 
