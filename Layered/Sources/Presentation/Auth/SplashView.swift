@@ -72,27 +72,27 @@ struct SplashView: View {
             circleScale = 1
         }
 
-        // Phase 2: 뱅글뱅글 천천히 회전 (0.4~2.4초) — 2바퀴
-        withAnimation(.easeInOut(duration: 2.0).delay(0.4)) {
-            rotationAngle = 720
+        // Phase 2: 뱅글뱅글 회전 (0.4~1.9초) — 회전하면서 합체됨
+        withAnimation(.linear(duration: 1.5).delay(0.4)) {
+            rotationAngle = 1080  // 3바퀴
         }
 
-        // Phase 3: 중앙으로 합체 + 비-primary 페이드아웃 (2.4~3.0초)
-        withAnimation(.spring(response: 0.6, dampingFraction: 0.8).delay(2.4)) {
+        // Phase 3: 회전 중 합체 시작 (1.3~1.9초)
+        withAnimation(.easeInOut(duration: 0.6).delay(1.3)) {
             mergeProgress = 0
         }
-        withAnimation(.easeOut(duration: 0.5).delay(2.5)) {
+        withAnimation(.easeOut(duration: 0.5).delay(1.4)) {
             nonPrimaryOpacity = 0
         }
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.65).delay(2.8)) {
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.65).delay(1.8)) {
             finalScale = 1.15
         }
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.7).delay(3.1)) {
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.7).delay(2.1)) {
             finalScale = 1.0
         }
 
-        // Phase 4: 텍스트 등장 (3.0초 이후)
-        withAnimation(.easeOut(duration: 0.5).delay(3.0)) {
+        // Phase 4: 텍스트 등장 (1.9초 이후)
+        withAnimation(.easeOut(duration: 0.5).delay(1.9)) {
             textOpacity = 1
         }
     }

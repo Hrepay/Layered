@@ -74,7 +74,8 @@ final class AppState {
 
     // MARK: - 스플래시 후 상태 결정
     func checkAuthState() {
-        let minSplashSeconds: UInt64 = 3_000_000_000 // 3초 (애니메이션 시간)
+        // 애니메이션 2.4초 + 1초 대기 = 3.4초 최소 표시
+        let minSplashSeconds: UInt64 = 3_400_000_000
         Task { @MainActor in
             async let minDelay: () = Task.sleep(nanoseconds: minSplashSeconds)
 
