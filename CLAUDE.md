@@ -72,4 +72,14 @@
   - 4-C: 알림 설정 연동 ✅ (3개 토글 Firestore 저장 + iOS 권한 체크 + Cloud Functions 배포)
   - 4-D: UX 품질 개선 ✅ (전역 에러 처리 AppError, 빈 상태 통일, 글로벌 키보드 dismiss, URL 자동 추출)
   - 4-E: 아키텍처 정리 ✅ (AppState에서 Firebase 직접 호출 제거, Optional AppState 통일, ImageProcessor 분리, iPhone 세로 전용)
-  - 4-F: 출시 준비 (진행 중) — 앱 아이콘 ✅ / Storage 규칙, 약관, 스크린샷, TestFlight, 심사 제출 대기
+  - 4-F: 출시 준비 (진행 중)
+    - 앱 아이콘 / 로그인 화면 앱 로고 교체 ✅
+    - 모임 삭제 권한 플래너·관리자 제한 ✅
+    - 사진첩 접근 사유 구체화 ✅
+    - 번들 ID 교체 (`dev.tuist.Layered` → `io.github.hrepay.layered`) + Firebase iOS 앱 재등록 ✅
+    - Firestore/Storage 프로덕션 보안 규칙 배포 ✅
+    - 디버그 로그인 credentials 환경변수화 ✅
+    - FCM 토큰 동기화 버그 픽스 + APNs 키 재업로드 ✅
+    - 약관 3종(이용약관·개인정보·마케팅) 작성 → GitHub Pages 호스팅 ✅
+    - 로그인 전 약관 동의 시트 + 설정 내 약관 링크 ✅
+    - 스크린샷, TestFlight, 심사 제출 대기
