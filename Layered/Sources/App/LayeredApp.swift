@@ -5,7 +5,7 @@ import FirebaseFirestore
 import FirebaseMessaging
 import UserNotifications
 
-class AppDelegate: NSObject, UIApplicationDelegate, MessagingDelegate, UNUserNotificationCenterDelegate {
+class AppDelegate: NSObject, UIApplicationDelegate, MessagingDelegate, UNUserNotificationCenterDelegate, UIGestureRecognizerDelegate {
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
@@ -33,6 +33,40 @@ class AppDelegate: NSObject, UIApplicationDelegate, MessagingDelegate, UNUserNot
             }
         }
 
+        // 화면 어디든 탭하면 키보드 내림 (window 레벨 제스처)
+        DispatchQueue.main.async { [weak self] in
+            self?.installKeyboardDismissGesture()
+        }
+
+        return true
+    }
+
+    // MARK: - 글로벌 키보드 dismiss 제스처
+    private func installKeyboardDismissGesture() {
+        guard let window = UIApplication.shared
+            .connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .flatMap(\.windows)
+            .first(where: \.isKeyWindow) else { return }
+
+        let tap = UITapGestureRecognizer(target: window, action: #selector(UIView.endEditing))
+        tap.cancelsTouchesInView = false   // 다른 탭/버튼 동작 보존
+        tap.delegate = self                 // 다른 제스처와 동시 인식 허용
+        window.addGestureRecognizer(tap)
+    }
+
+    // 다른 제스처(스크롤, 버튼 등)와 동시 인식 허용
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        true
+    }
+
+    // TextField/TextView 영역에서 시작된 터치는 받지 않음 (텍스트 선택/더블탭 보존)
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        var view = touch.view
+        while let current = view {
+            if current is UITextField || current is UITextView { return false }
+            view = current.superview
+        }
         return true
     }
 

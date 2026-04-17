@@ -87,7 +87,6 @@ struct ProfileEditView: View {
         .sheet(isPresented: $showImagePicker) {
             ImagePicker(selectedImage: $selectedImage)
         }
-        .dismissKeyboardOnTap()
     }
 }
 
