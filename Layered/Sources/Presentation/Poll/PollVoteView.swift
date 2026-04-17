@@ -172,6 +172,7 @@ struct PollVoteView: View {
                                     .stroke(isSelected ? AppColors.primary : .clear, lineWidth: 1.5)
                             )
                         }
+                        .buttonStyle(.plain)
                     }
                 }
                 .padding(.horizontal, 20)
