@@ -29,6 +29,7 @@ struct NotificationSettingsView: View {
             }
             .listStyle(.insetGrouped)
         }
+        .swipeBack(onBack: onBack)
     }
 }
 

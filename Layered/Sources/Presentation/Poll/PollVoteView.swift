@@ -242,6 +242,7 @@ struct PollVoteView: View {
                 hasVoted = true
             }
         }
+        .swipeBack(onBack: onBack)
     }
 
     private func voterNames(for ids: [String]) -> String {

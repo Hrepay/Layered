@@ -204,3 +204,28 @@ enum Haptic {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
     }
 }
+
+// MARK: - 스와이프로 뒤로가기 (fullScreenCover용)
+struct SwipeBackModifier: ViewModifier {
+    let onBack: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .gesture(
+                DragGesture(minimumDistance: 20, coordinateSpace: .global)
+                    .onEnded { value in
+                        // 왼쪽 엣지에서 시작 + 오른쪽으로 100pt 이상 드래그
+                        if value.startLocation.x < 50 && value.translation.width > 100 {
+                            Haptic.light()
+                            onBack()
+                        }
+                    }
+            )
+    }
+}
+
+extension View {
+    func swipeBack(onBack: @escaping () -> Void) -> some View {
+        modifier(SwipeBackModifier(onBack: onBack))
+    }
+}

@@ -118,6 +118,7 @@ struct RotationOrderView: View {
             let mode = appState?.currentFamily?.rotationMode ?? "auto"
             selectedMode = RotationMode(rawValue: mode) ?? .auto
         }
+        .swipeBack(onBack: onBack)
     }
 
     // MARK: - 자동 모드

@@ -308,6 +308,7 @@ struct MeetingDetailView: View {
         } message: {
             Text("정말 삭제하시겠습니까?\n관련 기록도 함께 삭제됩니다.")
         }
+        .swipeBack(onBack: onBack)
     }
 
     // MARK: - Computed

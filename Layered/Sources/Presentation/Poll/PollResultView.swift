@@ -107,6 +107,7 @@ struct PollResultView: View {
                 poll = updated
             }
         }
+        .swipeBack(onBack: onBack)
     }
 
     private func voterNames(for ids: [String]) -> String {

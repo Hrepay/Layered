@@ -46,6 +46,7 @@ struct MemberListView: View {
         .task {
             await appState?.refreshMembers()
         }
+        .swipeBack(onBack: onBack)
     }
 
     private func memberRow(_ member: Member) -> some View {
