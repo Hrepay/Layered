@@ -99,7 +99,17 @@ struct HomeView: View {
             .toolbar(.hidden, for: .navigationBar)
             .task(id: "\(upcomingMeeting?.id ?? "")|\(upcomingMeeting?.placeURL ?? "")") {
                 meetingLinkMetadata = nil
-                if let urlString = upcomingMeeting?.placeURL, let url = URL(string: urlString) {
+                guard let urlString = upcomingMeeting?.placeURL else { return }
+                #if DEBUG
+                if AppState.useMockForScreenshots {
+                    meetingLinkMetadata = MockLinkMetadata.hangang(
+                        urlString: urlString,
+                        title: upcomingMeeting?.place ?? "한강공원"
+                    )
+                    return
+                }
+                #endif
+                if let url = URL(string: urlString) {
                     let provider = LPMetadataProvider()
                     if let metadata = try? await provider.startFetchingMetadata(for: url) {
                         meetingLinkMetadata = metadata

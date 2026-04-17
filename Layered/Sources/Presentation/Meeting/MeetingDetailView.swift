@@ -365,7 +365,14 @@ struct MeetingDetailView: View {
             let polls = try? await appState.getPolls(meetingId: meeting.id)
             poll = polls?.first
         }
-        if let urlString = meeting.placeURL, let url = URL(string: urlString) {
+        guard let urlString = meeting.placeURL else { return }
+        #if DEBUG
+        if AppState.useMockForScreenshots {
+            linkMetadata = MockLinkMetadata.hangang(urlString: urlString, title: meeting.place)
+            return
+        }
+        #endif
+        if let url = URL(string: urlString) {
             let provider = LPMetadataProvider()
             if let metadata = try? await provider.startFetchingMetadata(for: url) {
                 linkMetadata = metadata
