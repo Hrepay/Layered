@@ -2,7 +2,7 @@ import SwiftUI
 
 struct AccountView: View {
     let onBack: () -> Void
-    @Environment(AppState.self) private var appState: AppState?
+    @Environment(AppState.self) private var appState: AppState
 
     @State private var showLogoutAlert = false
     @State private var showDeleteAlert = false
@@ -49,7 +49,7 @@ struct AccountView: View {
         .alert("로그아웃", isPresented: $showLogoutAlert) {
             Button("취소", role: .cancel) {}
             Button("로그아웃", role: .destructive) {
-                appState?.signOut()
+                appState.signOut()
             }
         } message: {
             Text("정말 로그아웃하시겠습니까?")
@@ -57,7 +57,7 @@ struct AccountView: View {
         .alert("계정 삭제", isPresented: $showDeleteAlert) {
             Button("취소", role: .cancel) {}
             Button("삭제", role: .destructive) {
-                Task { await appState?.deleteAccount() }
+                Task { await appState.deleteAccount() }
             }
         } message: {
             Text("모든 데이터가 영구 삭제됩니다.\nApple 재인증이 필요합니다.")

@@ -2,7 +2,7 @@ import SwiftUI
 
 struct FamilyManagementView: View {
     let onBack: () -> Void
-    @Environment(AppState.self) private var appState: AppState?
+    @Environment(AppState.self) private var appState: AppState
 
     @State private var showLeaveAlert = false
     @State private var showDeleteAlert = false
@@ -10,7 +10,7 @@ struct FamilyManagementView: View {
     @State private var newFamilyName = ""
 
     private var isAdmin: Bool {
-        guard let appState else { return false }
+        // appState is non-optional
         return appState.currentUser?.id == appState.currentFamily?.adminId
     }
 
@@ -27,9 +27,9 @@ struct FamilyManagementView: View {
                     icon: "pencil.line",
                     iconColor: AppColors.primary,
                     title: "가정 이름 변경",
-                    trailing: appState?.currentFamily?.name
+                    trailing: appState.currentFamily?.name
                 ) {
-                    newFamilyName = appState?.currentFamily?.name ?? ""
+                    newFamilyName = appState.currentFamily?.name ?? ""
                     showRenameAlert = true
                 }
 
@@ -70,8 +70,8 @@ struct FamilyManagementView: View {
             Button("변경") {
                 guard !newFamilyName.isEmpty else { return }
                 Task {
-                    do { try await appState?.updateFamilyName(newFamilyName) }
-                    catch { appState?.error = AppError.from(error) }
+                    do { try await appState.updateFamilyName(newFamilyName) }
+                    catch { appState.error = AppError.from(error) }
                 }
             }
         } message: {
@@ -81,8 +81,8 @@ struct FamilyManagementView: View {
             Button("취소", role: .cancel) {}
             Button("나가기", role: .destructive) {
                 Task {
-                    do { try await appState?.leaveFamily() }
-                    catch { appState?.error = AppError.from(error) }
+                    do { try await appState.leaveFamily() }
+                    catch { appState.error = AppError.from(error) }
                 }
             }
         } message: {
@@ -92,8 +92,8 @@ struct FamilyManagementView: View {
             Button("취소", role: .cancel) {}
             Button("삭제", role: .destructive) {
                 Task {
-                    do { try await appState?.deleteFamily() }
-                    catch { appState?.error = AppError.from(error) }
+                    do { try await appState.deleteFamily() }
+                    catch { appState.error = AppError.from(error) }
                 }
             }
         } message: {

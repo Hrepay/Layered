@@ -28,7 +28,7 @@ enum RotationMode: String, CaseIterable {
 
 struct RotationOrderView: View {
     let onBack: () -> Void
-    @Environment(AppState.self) private var appState: AppState?
+    @Environment(AppState.self) private var appState: AppState
     @State private var members: [Member] = []
     @State private var selectedMode: RotationMode = .auto
     @State private var fixedPlannerIndex: Int = 0
@@ -112,10 +112,10 @@ struct RotationOrderView: View {
         }
         .toast($toast)
         .task {
-            await appState?.refreshMembers()
-            members = appState?.members ?? []
-            fixedPlannerIndex = appState?.currentFamily?.currentPlannerIndex ?? 0
-            let mode = appState?.currentFamily?.rotationMode ?? "auto"
+            await appState.refreshMembers()
+            members = appState.members
+            fixedPlannerIndex = appState.currentFamily?.currentPlannerIndex ?? 0
+            let mode = appState.currentFamily?.rotationMode ?? "auto"
             selectedMode = RotationMode(rawValue: mode) ?? .auto
         }
         .swipeBack(onBack: onBack)
@@ -215,7 +215,7 @@ struct RotationOrderView: View {
 
     // MARK: - 저장
     private func saveSettings() {
-        guard let appState else { return }
+        
         Task {
             do {
                 // rotationMode 저장

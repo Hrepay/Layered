@@ -5,7 +5,7 @@ struct PollVoteView: View {
     let onBack: () -> Void
     var meetingId: String = ""
 
-    @Environment(AppState.self) private var appState: AppState?
+    @Environment(AppState.self) private var appState: AppState
 
     @State private var poll: Poll
     @State private var selectedOptions: Set<String> = []
@@ -182,7 +182,7 @@ struct PollVoteView: View {
             // MARK: - 투표 버튼
             Button {
                 Haptic.medium()
-                if let appState, !meetingId.isEmpty {
+                if !meetingId.isEmpty {
                     Task {
                         do {
                             let toRemove = previousVotes.subtracting(selectedOptions)
@@ -226,7 +226,7 @@ struct PollVoteView: View {
         .alert("투표 삭제", isPresented: $showDeleteAlert) {
             Button("취소", role: .cancel) {}
             Button("삭제", role: .destructive) {
-                if let appState, !meetingId.isEmpty {
+                if !meetingId.isEmpty {
                     Task {
                         do {
                             try await appState.deletePoll(meetingId: meetingId, pollId: poll.id)
@@ -243,7 +243,7 @@ struct PollVoteView: View {
             Text("이 투표를 삭제하시겠습니까?\n삭제하면 되돌릴 수 없어요.")
         }
         .onAppear {
-            guard let userId = appState?.currentUser?.id else { return }
+            guard let userId = appState.currentUser?.id else { return }
             let voted = Set(poll.options.filter { $0.voterIds.contains(userId) }.map(\.id))
             if !voted.isEmpty {
                 selectedOptions = voted
@@ -255,7 +255,7 @@ struct PollVoteView: View {
     }
 
     private func voterNames(for ids: [String]) -> String {
-        let members = appState?.members ?? []
+        let members = appState.members
         return ids.map { id in
             members.first(where: { $0.id == id })?.name ?? id
         }.joined(separator: ", ")

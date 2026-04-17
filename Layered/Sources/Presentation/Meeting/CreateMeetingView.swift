@@ -24,7 +24,7 @@ let activityPresets: [ActivityPreset] = [
 struct CreateMeetingView: View {
     let onBack: () -> Void
     let onCreated: (Meeting, Poll?) -> Void
-    @Environment(AppState.self) private var appState: AppState?
+    @Environment(AppState.self) private var appState: AppState
 
     @State private var date = Date()
     @State private var place = ""
@@ -53,8 +53,8 @@ struct CreateMeetingView: View {
                     Haptic.medium()
                     let meeting = Meeting(
                         id: UUID().uuidString,
-                        plannerId: appState?.currentUser?.id ?? "",
-                        plannerName: appState?.currentUser?.name ?? "",
+                        plannerId: appState.currentUser?.id ?? "",
+                        plannerName: appState.currentUser?.name ?? "",
                         meetingDate: date,
                         place: place,
                         placeLatitude: nil,

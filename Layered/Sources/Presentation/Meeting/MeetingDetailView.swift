@@ -8,7 +8,7 @@ struct MeetingDetailView: View {
     var onDeleted: (() -> Void)?
     var onUpdated: (() -> Void)?
 
-    @Environment(AppState.self) private var appState: AppState?
+    @Environment(AppState.self) private var appState: AppState
 
     @State private var showDeleteAlert = false
     @State private var showEdit = false
@@ -159,7 +159,8 @@ struct MeetingDetailView: View {
                     }
 
                     // MARK: - 참여 인원
-                    if let members = appState?.members, !members.isEmpty {
+                    let members = appState.members
+                    if !members.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
                             HStack {
                                 Text("참여 인원 (\(members.count)명)")
@@ -272,14 +273,12 @@ struct MeetingDetailView: View {
             }, onSaved: { updatedMeeting in
                 showEdit = false
                 meeting = updatedMeeting
-                if let appState {
-                    Task {
-                        do {
-                            try await appState.updateMeeting(updatedMeeting)
-                            onUpdated?()
-                        } catch {
-                            appState.error = AppError.from(error)
-                        }
+                Task {
+                    do {
+                        try await appState.updateMeeting(updatedMeeting)
+                        onUpdated?()
+                    } catch {
+                        appState.error = AppError.from(error)
                     }
                 }
             })
@@ -296,14 +295,12 @@ struct MeetingDetailView: View {
         .alert("모임 삭제", isPresented: $showDeleteAlert) {
             Button("취소", role: .cancel) {}
             Button("삭제", role: .destructive) {
-                if let appState {
-                    Task {
-                        do {
-                            try await appState.deleteMeeting(meeting.id)
-                            onDeleted?()
-                        } catch {
-                            appState.error = AppError.from(error)
-                        }
+                Task {
+                    do {
+                        try await appState.deleteMeeting(meeting.id)
+                        onDeleted?()
+                    } catch {
+                        appState.error = AppError.from(error)
                     }
                 }
             }
@@ -356,7 +353,7 @@ struct MeetingDetailView: View {
     // MARK: - Helpers
 
     private func reloadDetail() async {
-        if meeting.hasPoll, let appState {
+        if meeting.hasPoll {
             let polls = try? await appState.getPolls(meetingId: meeting.id)
             poll = polls?.first
         }
@@ -369,7 +366,7 @@ struct MeetingDetailView: View {
     }
 
     private func refreshPoll() {
-        guard let appState, let currentPoll = poll else { return }
+        guard let currentPoll = poll else { return }
         Task {
             if let updated = try? await appState.getPoll(meetingId: meeting.id, pollId: currentPoll.id) {
                 poll = updated

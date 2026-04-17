@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @Environment(AppState.self) private var appState: AppState?
+    @Environment(AppState.self) private var appState: AppState
 
     @State private var showProfileEdit = false
     @State private var refreshId = UUID()
@@ -19,9 +19,9 @@ struct SettingsView: View {
                 VStack(spacing: 14) {
                     ZStack(alignment: .bottomTrailing) {
                         AvatarView(
-                            name: appState?.currentUser?.name ?? "사용자",
+                            name: appState.currentUser?.name ?? "사용자",
                             size: 100,
-                            imageURL: appState?.currentUser?.profileImageURL
+                            imageURL: appState.currentUser?.profileImageURL
                         )
 
                         Button {
@@ -39,11 +39,11 @@ struct SettingsView: View {
                         }
                     }
 
-                    Text(appState?.currentUser?.name ?? "사용자")
+                    Text(appState.currentUser?.name ?? "사용자")
                         .font(.title2)
                         .fontWeight(.bold)
 
-                    Text(appState?.currentFamily?.name ?? "")
+                    Text(appState.currentFamily?.name ?? "")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -60,7 +60,7 @@ struct SettingsView: View {
                             .font(.title3)
                             .fontWeight(.bold)
                             .foregroundStyle(.primary)
-                        Text("\(appState?.members.count ?? 0)명")
+                        Text("\(appState.members.count)명")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -207,8 +207,8 @@ struct SettingsView: View {
 
     // MARK: - Helpers
     private var currentPlannerName: String {
-        guard let members = appState?.members,
-              let family = appState?.currentFamily,
+        let members = appState.members
+        guard let family = appState.currentFamily,
               family.currentPlannerIndex < members.count else { return "미정" }
         return members[family.currentPlannerIndex].name
     }

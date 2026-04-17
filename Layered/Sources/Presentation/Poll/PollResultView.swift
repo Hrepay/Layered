@@ -5,7 +5,7 @@ struct PollResultView: View {
     let onBack: () -> Void
     var meetingId: String = ""
 
-    @Environment(AppState.self) private var appState: AppState?
+    @Environment(AppState.self) private var appState: AppState
     @State private var poll: Poll
 
     init(poll: Poll, onBack: @escaping () -> Void, meetingId: String = "") {
@@ -102,7 +102,7 @@ struct PollResultView: View {
             }
         }
         .task {
-            guard let appState, !meetingId.isEmpty else { return }
+            guard !meetingId.isEmpty else { return }
             if let updated = try? await appState.getPoll(meetingId: meetingId, pollId: poll.id) {
                 poll = updated
             }
@@ -111,7 +111,7 @@ struct PollResultView: View {
     }
 
     private func voterNames(for ids: [String]) -> String {
-        let members = appState?.members ?? []
+        let members = appState.members
         return ids.map { id in
             members.first(where: { $0.id == id })?.name ?? id
         }.joined(separator: ", ")

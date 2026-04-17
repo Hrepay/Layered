@@ -1,12 +1,12 @@
 import SwiftUI
 
 struct HistoryView: View {
-    @Environment(AppState.self) private var appState: AppState?
+    @Environment(AppState.self) private var appState: AppState
     @State private var selectedMeeting: Meeting?
     @State private var meetingToDelete: Meeting?
     @State private var showDeleteAlert = false
 
-    private var meetings: [Meeting] { appState?.meetings ?? [] }
+    private var meetings: [Meeting] { appState.meetings }
 
     var body: some View {
         NavigationStack {
@@ -48,15 +48,15 @@ struct HistoryView: View {
                                 )
                                 statCard(
                                     icon: "star.fill",
-                                    value: (appState?.averageRating ?? 0) > 0
-                                        ? String(format: "%.1f", appState?.averageRating ?? 0)
+                                    value: (appState.averageRating) > 0
+                                        ? String(format: "%.1f", appState.averageRating)
                                         : "-",
                                     label: "평균 별점"
                                 )
                                 statCard(
                                     icon: "flame.fill",
-                                    value: (appState?.consecutiveWeeks ?? 0) > 0
-                                        ? "\(appState?.consecutiveWeeks ?? 0)주"
+                                    value: (appState.consecutiveWeeks) > 0
+                                        ? "\(appState.consecutiveWeeks)주"
                                         : "-",
                                     label: "연속 달성"
                                 )
@@ -115,7 +115,7 @@ struct HistoryView: View {
 
                                                 Spacer()
 
-                                                if appState?.myRecordedMeetingIds.contains(meeting.id) == true {
+                                                if appState.myRecordedMeetingIds.contains(meeting.id) == true {
                                                     HStack(spacing: 3) {
                                                         Image(systemName: "checkmark.circle.fill")
                                                             .font(.caption2)
@@ -145,8 +145,8 @@ struct HistoryView: View {
                         .padding(.bottom, 40)
                     }
                     .refreshable {
-                        await appState?.refreshMeetings()
-                        await appState?.checkMyRecords()
+                        await appState.refreshMeetings()
+                        await appState.checkMyRecords()
                     }
                 }
             }
@@ -157,14 +157,14 @@ struct HistoryView: View {
                     selectedMeeting = nil
                 }, onDeleted: {
                     selectedMeeting = nil
-                    Task { await appState?.refreshMeetings() }
+                    Task { await appState.refreshMeetings() }
                 })
                 .environment(appState)
             }
             .alert("모임 삭제", isPresented: $showDeleteAlert) {
                 Button("취소", role: .cancel) {}
                 Button("삭제", role: .destructive) {
-                    if let meeting = meetingToDelete, let appState {
+                    if let meeting = meetingToDelete {
                         Task {
                             do { try await appState.deleteMeeting(meeting.id) }
                             catch { appState.error = AppError.from(error) }

@@ -7,7 +7,7 @@ struct HomeView: View {
     var meetings: [Meeting]
     var currentUser: User
 
-    @Environment(AppState.self) private var appState: AppState?
+    @Environment(AppState.self) private var appState: AppState
 
     @State private var showMeetingDetail: Meeting?
     @State private var showCreateMeeting = false
@@ -76,7 +76,7 @@ struct HomeView: View {
                         // 지난 모임 기록 카드
                         if let past = pastMeeting,
                            !dismissedRecordCard,
-                           !(appState?.myRecordedMeetingIds.contains(past.id) ?? false) {
+                           !(appState.myRecordedMeetingIds.contains(past.id) ?? false) {
                             recordPromptCard(past)
                         }
 
@@ -92,7 +92,7 @@ struct HomeView: View {
                 .padding(.bottom, 24)
             }
             .refreshable {
-                await appState?.loadHomeData()
+                await appState.loadHomeData()
             }
             .toast($toast)
             .navigationBarTitleDisplayMode(.inline)
@@ -111,9 +111,9 @@ struct HomeView: View {
                     showMeetingDetail = nil
                 }, onDeleted: {
                     showMeetingDetail = nil
-                    Task { await appState?.refreshMeetings() }
+                    Task { await appState.refreshMeetings() }
                 }, onUpdated: {
-                    Task { await appState?.refreshMeetings() }
+                    Task { await appState.refreshMeetings() }
                 })
                 .environment(appState)
             }
@@ -122,16 +122,14 @@ struct HomeView: View {
                     showCreateMeeting = false
                 }, onCreated: { meeting, poll in
                     showCreateMeeting = false
-                    if let appState {
-                        Task {
-                            do {
-                                let created = try await appState.createMeeting(meeting)
-                                if let poll {
-                                    _ = try await appState.createPoll(meetingId: created.id, poll: poll)
-                                }
-                            } catch {
-                                appState.error = AppError.from(error)
+                    Task {
+                        do {
+                            let created = try await appState.createMeeting(meeting)
+                            if let poll {
+                                _ = try await appState.createPoll(meetingId: created.id, poll: poll)
                             }
+                        } catch {
+                            appState.error = AppError.from(error)
                         }
                     }
                 })
@@ -142,15 +140,13 @@ struct HomeView: View {
                     showCreateRecord = nil
                 }, onSaved: { record in
                     showCreateRecord = nil
-                    if let appState {
-                        Task {
-                            do {
-                                _ = try await appState.createRecord(meetingId: meeting.id, record: record)
-                                await appState.checkMyRecords()
-                                toast = ToastData(type: .success, message: "기록이 저장되었습니다")
-                            } catch {
-                                appState.error = AppError.from(error)
-                            }
+                    Task {
+                        do {
+                            _ = try await appState.createRecord(meetingId: meeting.id, record: record)
+                            await appState.checkMyRecords()
+                            toast = ToastData(type: .success, message: "기록이 저장되었습니다")
+                        } catch {
+                            appState.error = AppError.from(error)
                         }
                     }
                 })

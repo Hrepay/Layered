@@ -11,7 +11,7 @@ enum FamilySetupStep {
 
 struct FamilySetupView: View {
     let onJoined: (Family) -> Void
-    @Environment(AppState.self) private var appState: AppState?
+    @Environment(AppState.self) private var appState: AppState
     @State private var step: FamilySetupStep = .select
 
     var body: some View {
@@ -33,7 +33,7 @@ struct FamilySetupView: View {
                 })
             case .inviteShare(let code):
                 InviteCodeShareView(inviteCode: code, onDone: {
-                    if let family = appState?.currentFamily {
+                    if let family = appState.currentFamily {
                         onJoined(family)
                     }
                 })
@@ -48,7 +48,7 @@ struct FamilySetupView: View {
                 ProfileSetupView(onBack: {
                     step = .join
                 }, onComplete: { profileName, image in
-                    guard let appState, let userId = appState.currentUser?.id else { return }
+                    guard let userId = appState.currentUser?.id else { return }
                     appState.isLoading = true
                     Task {
                         do {
@@ -72,7 +72,7 @@ struct FamilySetupView: View {
     }
 
     private func createFamily(familyName: String, profileName: String, image: UIImage? = nil) {
-        guard let appState, let userId = appState.currentUser?.id else { return }
+        guard let userId = appState.currentUser?.id else { return }
         appState.isLoading = true
         Task {
             do {

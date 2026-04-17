@@ -2,7 +2,7 @@ import SwiftUI
 
 struct InviteMemberView: View {
     let onBack: () -> Void
-    @Environment(AppState.self) private var appState: AppState?
+    @Environment(AppState.self) private var appState: AppState
 
     @State private var inviteCode = ""
     @State private var copied = false
@@ -99,10 +99,6 @@ struct InviteMemberView: View {
     }
 
     private func generateCode() {
-        guard let appState else {
-            inviteCode = String((0..<6).map { _ in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".randomElement()! })
-            return
-        }
         isLoadingCode = true
         Task {
             do {

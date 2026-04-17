@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ProfileEditView: View {
     let onBack: () -> Void
-    @Environment(AppState.self) private var appState: AppState?
+    @Environment(AppState.self) private var appState: AppState
 
     @State private var name = ""
     @State private var showImagePicker = false
@@ -17,7 +17,7 @@ struct ProfileEditView: View {
                 trailingText: "저장",
                 trailingAction: {
                     Haptic.medium()
-                    guard let appState else { onBack(); return }
+                    
                     isUploading = true
                     Task {
                         do {
@@ -50,7 +50,7 @@ struct ProfileEditView: View {
                             AvatarView(
                                 name: name.isEmpty ? " " : name,
                                 size: 100,
-                                imageURL: appState?.currentUser?.profileImageURL
+                                imageURL: appState.currentUser?.profileImageURL
                             )
                         }
 
@@ -82,7 +82,7 @@ struct ProfileEditView: View {
         }
         .loadingOverlay(isUploading)
         .onAppear {
-            name = appState?.currentUser?.name ?? ""
+            name = appState.currentUser?.name ?? ""
         }
         .sheet(isPresented: $showImagePicker) {
             ImagePicker(selectedImage: $selectedImage)

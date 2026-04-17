@@ -5,7 +5,7 @@ struct RecordDetailView: View {
     let onBack: () -> Void
     var onDeleted: (() -> Void)?
 
-    @Environment(AppState.self) private var appState: AppState?
+    @Environment(AppState.self) private var appState: AppState
 
     @State private var records: [MeetingRecord] = []
     @State private var showRecordDeleteAlert = false
@@ -15,7 +15,7 @@ struct RecordDetailView: View {
     @State private var fullScreenImageURL: String?
 
     private var hasMyRecord: Bool {
-        guard let userId = appState?.currentUser?.id else { return false }
+        guard let userId = appState.currentUser?.id else { return false }
         return records.contains { $0.memberId == userId }
     }
 
@@ -91,7 +91,7 @@ struct RecordDetailView: View {
                                         }
                                     }
 
-                                    if record.memberId == appState?.currentUser?.id {
+                                    if record.memberId == appState.currentUser?.id {
                                         Menu {
                                             Button("삭제", systemImage: "trash.fill", role: .destructive) {
                                                 recordToDelete = record
@@ -171,14 +171,12 @@ struct RecordDetailView: View {
                 showCreateRecord = false
             }, onSaved: { record in
                 showCreateRecord = false
-                if let appState {
-                    Task {
-                        do {
-                            _ = try await appState.createRecord(meetingId: meeting.id, record: record)
-                            await loadRecords()
-                        } catch {
-                            appState.error = AppError.from(error)
-                        }
+                Task {
+                    do {
+                        _ = try await appState.createRecord(meetingId: meeting.id, record: record)
+                        await loadRecords()
+                    } catch {
+                        appState.error = AppError.from(error)
                     }
                 }
             })
@@ -187,7 +185,7 @@ struct RecordDetailView: View {
         .alert("기록 삭제", isPresented: $showRecordDeleteAlert) {
             Button("취소", role: .cancel) {}
             Button("삭제", role: .destructive) {
-                if let record = recordToDelete, let appState {
+                if let record = recordToDelete {
                     Task {
                         do {
                             try await appState.deleteRecord(meetingId: meeting.id, recordId: record.id)
@@ -204,14 +202,12 @@ struct RecordDetailView: View {
         .alert("모임 삭제", isPresented: $showMeetingDeleteAlert) {
             Button("취소", role: .cancel) {}
             Button("삭제", role: .destructive) {
-                if let appState {
-                    Task {
-                        do {
-                            try await appState.deleteMeeting(meeting.id)
-                            onDeleted?()
-                        } catch {
-                            appState.error = AppError.from(error)
-                        }
+                Task {
+                    do {
+                        try await appState.deleteMeeting(meeting.id)
+                        onDeleted?()
+                    } catch {
+                        appState.error = AppError.from(error)
                     }
                 }
             }
@@ -228,11 +224,7 @@ struct RecordDetailView: View {
     }
 
     private func loadRecords() async {
-        if let appState {
-            records = (try? await appState.getRecords(meetingId: meeting.id)) ?? []
-        } else {
-            records = []
-        }
+        records = (try? await appState.getRecords(meetingId: meeting.id)) ?? []
     }
 
     private func formatDate(_ date: Date) -> String {

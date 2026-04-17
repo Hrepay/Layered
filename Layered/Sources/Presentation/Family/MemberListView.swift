@@ -2,15 +2,15 @@ import SwiftUI
 
 struct MemberListView: View {
     let onBack: () -> Void
-    @Environment(AppState.self) private var appState: AppState?
+    @Environment(AppState.self) private var appState: AppState
 
     @State private var showKickAlert = false
     @State private var memberToKick: Member?
     @State private var showInvite = false
 
-    private var members: [Member] { appState?.members ?? [] }
-    private var family: Family? { appState?.currentFamily }
-    private var currentUserId: String { appState?.currentUser?.id ?? "" }
+    private var members: [Member] { appState.members }
+    private var family: Family? { appState.currentFamily }
+    private var currentUserId: String { appState.currentUser?.id ?? "" }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -43,7 +43,7 @@ struct MemberListView: View {
                     .padding(.top, 8)
                 }
                 .refreshable {
-                    await appState?.refreshMembers()
+                    await appState.refreshMembers()
                 }
             }
         }
@@ -54,7 +54,7 @@ struct MemberListView: View {
         .alert("구성원 강퇴", isPresented: $showKickAlert) {
             Button("취소", role: .cancel) {}
             Button("강퇴", role: .destructive) {
-                if let memberId = memberToKick?.id, let appState {
+                if let memberId = memberToKick?.id {
                     Task {
                         do { try await appState.removeMember(memberId) }
                         catch { appState.error = AppError.from(error) }
@@ -65,7 +65,7 @@ struct MemberListView: View {
             Text("\(memberToKick?.name ?? "")님을 정말 강퇴하시겠습니까?")
         }
         .task {
-            await appState?.refreshMembers()
+            await appState.refreshMembers()
         }
         .swipeBack(onBack: onBack)
     }

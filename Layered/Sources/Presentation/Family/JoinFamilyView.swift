@@ -3,7 +3,7 @@ import SwiftUI
 struct JoinFamilyView: View {
     let onBack: () -> Void
     let onJoined: (Family) -> Void
-    @Environment(AppState.self) private var appState: AppState?
+    @Environment(AppState.self) private var appState: AppState
 
     @State private var code = ""
     @State private var showPreview = false
@@ -97,7 +97,7 @@ struct JoinFamilyView: View {
     }
 
     private func verifyCode() {
-        guard let appState else { return }
+        
         isLoading = true
         Task {
             do {
