@@ -157,7 +157,7 @@ struct PollVoteView: View {
                                     if !poll.isAnonymous && !option.voterIds.isEmpty {
                                         Text(voterNames(for: option.voterIds))
                                             .font(.caption2)
-                                            .foregroundStyle(.secondary)
+                                            .foregroundStyle(.primary)
                                             .frame(maxWidth: .infinity, alignment: .leading)
                                     }
                                 }

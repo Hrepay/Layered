@@ -150,7 +150,7 @@ enum MockData {
             PollOption(
                 id: "opt-1",
                 title: "피크닉 + 자전거",
-                description: "돗자리 깔고 간식 먹으며 여유롭게",
+                description: nil,
                 imageURL: nil,
                 voterIds: ["user-001", "user-002", "user-004"],
                 voteCount: 3
@@ -158,7 +158,7 @@ enum MockData {
             PollOption(
                 id: "opt-2",
                 title: "배드민턴",
-                description: "다 같이 뛰어놀기",
+                description: nil,
                 imageURL: nil,
                 voterIds: ["user-003"],
                 voteCount: 1
@@ -166,7 +166,7 @@ enum MockData {
             PollOption(
                 id: "opt-3",
                 title: "강변 산책만",
-                description: "가볍게 걷고 저녁 먹기",
+                description: nil,
                 imageURL: nil,
                 voterIds: ["user-002"],
                 voteCount: 1
