@@ -15,7 +15,7 @@ let project = Project(
             name: "Layered",
             destinations: [.iPhone],
             product: .app,
-            bundleId: "dev.tuist.Layered",
+            bundleId: "io.github.hrepay.layered",
             deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(
                 with: [
@@ -47,7 +47,7 @@ let project = Project(
             name: "LayeredTests",
             destinations: [.iPhone],
             product: .unitTests,
-            bundleId: "dev.tuist.LayeredTests",
+            bundleId: "io.github.hrepay.layered.Tests",
             infoPlist: .default,
             buildableFolders: [
                 "Layered/Tests"
