@@ -53,6 +53,14 @@ final class FirebaseUserRepository: UserRepositoryProtocol {
         ])
     }
 
+    func recordTermsAgreement(userId: String, version: String, marketingConsent: Bool) async throws {
+        try await usersRef.document(userId).setData([
+            "agreedTermsAt": Timestamp(date: Date()),
+            "agreedTermsVersion": version,
+            "marketingConsent": marketingConsent,
+        ], merge: true)
+    }
+
     // MARK: - Helper
     private func userFromData(id: String, data: [String: Any]) -> User {
         User(
@@ -60,7 +68,10 @@ final class FirebaseUserRepository: UserRepositoryProtocol {
             name: data["name"] as? String ?? "사용자",
             profileImageURL: data["profileImageURL"] as? String,
             familyId: data["familyId"] as? String,
-            createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? Date()
+            createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? Date(),
+            agreedTermsAt: (data["agreedTermsAt"] as? Timestamp)?.dateValue(),
+            agreedTermsVersion: data["agreedTermsVersion"] as? String,
+            marketingConsent: data["marketingConsent"] as? Bool
         )
     }
 }

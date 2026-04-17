@@ -11,6 +11,7 @@ struct SettingsView: View {
     @State private var showNotification = false
     @State private var showAccount = false
     @State private var showFamilyManagement = false
+    @State private var legalURL: URL?
 
     var body: some View {
         ScrollView {
@@ -126,6 +127,31 @@ struct SettingsView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 20))
                 }
 
+                // MARK: - 약관 및 정책
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("약관 및 정책")
+                        .font(.subheadline)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.primary)
+                        .padding(.leading, 4)
+
+                    VStack(spacing: 0) {
+                        groupedRow(icon: "doc.text.fill", title: "이용약관") {
+                            legalURL = AppConstants.Legal.termsURL
+                        }
+                        Divider().padding(.leading, 66)
+                        groupedRow(icon: "hand.raised.fill", title: "개인정보 처리방침") {
+                            legalURL = AppConstants.Legal.privacyURL
+                        }
+                        Divider().padding(.leading, 66)
+                        groupedRow(icon: "megaphone.fill", title: "마케팅 정보 수신 동의") {
+                            legalURL = AppConstants.Legal.marketingURL
+                        }
+                    }
+                    .background(Color(.secondarySystemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                }
+
                 // MARK: - 계정 관리
                 Button {
                     Haptic.light()
@@ -172,6 +198,13 @@ struct SettingsView: View {
             FamilyManagementView(onBack: { showFamilyManagement = false })
                 .environment(appState)
         }
+        .sheet(item: Binding(
+            get: { legalURL.map { LegalURLItem(url: $0) } },
+            set: { legalURL = $0?.url }
+        )) { item in
+            SafariView(url: item.url)
+                .ignoresSafeArea()
+        }
     }
 
     private func groupedRow(icon: String, title: String, trailing: String? = nil, action: @escaping () -> Void) -> some View {
@@ -212,6 +245,11 @@ struct SettingsView: View {
               family.currentPlannerIndex < members.count else { return "미정" }
         return members[family.currentPlannerIndex].name
     }
+}
+
+private struct LegalURLItem: Identifiable {
+    let url: URL
+    var id: String { url.absoluteString }
 }
 
 #Preview {

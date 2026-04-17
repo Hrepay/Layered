@@ -13,13 +13,13 @@ struct RootView: View {
                     appState.completeOnboarding()
                 })
             case .login:
-                LoginView(onSignIn: {
+                LoginView(onSignIn: { marketingConsent in
                     Task {
-                        await appState.signInWithApple()
+                        await appState.signInWithApple(marketingConsent: marketingConsent)
                     }
-                }, onDebugSignIn: { email, password in
+                }, onDebugSignIn: { email, password, marketingConsent in
                     Task {
-                        await appState.signInWithEmail(email: email, password: password)
+                        await appState.signInWithEmail(email: email, password: password, marketingConsent: marketingConsent)
                     }
                 })
             case .familySetup:

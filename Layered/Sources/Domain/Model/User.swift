@@ -6,4 +6,7 @@ struct User: Identifiable, Codable {
     var profileImageURL: String?
     var familyId: String?
     let createdAt: Date
+    var agreedTermsAt: Date?
+    var agreedTermsVersion: String?
+    var marketingConsent: Bool?
 }

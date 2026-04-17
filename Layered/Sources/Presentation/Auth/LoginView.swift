@@ -1,10 +1,17 @@
 import SwiftUI
 
 struct LoginView: View {
-    let onSignIn: () -> Void
-    var onDebugSignIn: ((String, String) -> Void)?
+    let onSignIn: (_ marketingConsent: Bool) -> Void
+    var onDebugSignIn: ((String, String, Bool) -> Void)?
 
     @State private var appeared = false
+    @State private var showAgreement = false
+    @State private var pendingAction: PendingLoginAction?
+
+    private enum PendingLoginAction {
+        case apple
+        case debug(String, String)
+    }
 
     #if DEBUG
     // Xcode Scheme → Run → Arguments → Environment Variables 에서 DEBUG_EMAIL, DEBUG_PASSWORD 설정 시에만 노출
@@ -47,7 +54,8 @@ struct LoginView: View {
                 // Apple 로그인 버튼
                 Button(action: {
                     Haptic.medium()
-                    onSignIn()
+                    pendingAction = .apple
+                    showAgreement = true
                 }) {
                     HStack(spacing: 8) {
                         Image(systemName: "apple.logo")
@@ -66,7 +74,8 @@ struct LoginView: View {
                 if let (debugEmail, debugPassword) = debugCredentials {
                     Button(action: {
                         Haptic.light()
-                        onDebugSignIn?(debugEmail, debugPassword)
+                        pendingAction = .debug(debugEmail, debugPassword)
+                        showAgreement = true
                     }) {
                         HStack(spacing: 8) {
                             Image(systemName: "envelope.fill")
@@ -84,7 +93,7 @@ struct LoginView: View {
                 #endif
 
                 // 약관 안내
-                Text("로그인 시 이용약관 및 개인정보 처리방침에 동의합니다")
+                Text("로그인 단계에서 이용약관 및 개인정보 처리방침 동의 절차를 진행합니다")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
@@ -97,9 +106,31 @@ struct LoginView: View {
                 appeared = true
             }
         }
+        .sheet(isPresented: $showAgreement) {
+            TermsAgreementSheet(
+                onConfirm: { marketingConsent in
+                    showAgreement = false
+                    switch pendingAction {
+                    case .apple:
+                        onSignIn(marketingConsent)
+                    case .debug(let email, let password):
+                        onDebugSignIn?(email, password, marketingConsent)
+                    case .none:
+                        break
+                    }
+                    pendingAction = nil
+                },
+                onCancel: {
+                    showAgreement = false
+                    pendingAction = nil
+                }
+            )
+            .presentationDetents([.large])
+            .presentationDragIndicator(.hidden)
+        }
     }
 }
 
 #Preview {
-    LoginView(onSignIn: {})
+    LoginView(onSignIn: { _ in })
 }

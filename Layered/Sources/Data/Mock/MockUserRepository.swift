@@ -14,4 +14,6 @@ final class MockUserRepository: UserRepositoryProtocol {
     }
 
     func updateNotificationSettings(userId: String, settings: NotificationSettings) async throws {}
+
+    func recordTermsAgreement(userId: String, version: String, marketingConsent: Bool) async throws {}
 }

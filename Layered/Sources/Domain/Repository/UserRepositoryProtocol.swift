@@ -12,4 +12,5 @@ protocol UserRepositoryProtocol {
     func updateUser(_ user: User) async throws
     func loadNotificationSettings(userId: String) async throws -> NotificationSettings
     func updateNotificationSettings(userId: String, settings: NotificationSettings) async throws
+    func recordTermsAgreement(userId: String, version: String, marketingConsent: Bool) async throws
 }

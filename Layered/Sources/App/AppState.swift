@@ -102,7 +102,7 @@ final class AppState {
 
     // MARK: - 이메일 로그인 (디버그용)
     #if DEBUG
-    func signInWithEmail(email: String, password: String) async {
+    func signInWithEmail(email: String, password: String, marketingConsent: Bool = false) async {
         isLoading = true
         self.error = nil
         defer { isLoading = false }
@@ -117,6 +117,11 @@ final class AppState {
                 createdAt: Date()
             )
             try await userRepository.createUserIfNeeded(user)
+            try? await userRepository.recordTermsAgreement(
+                userId: uid,
+                version: AppConstants.Legal.termsVersion,
+                marketingConsent: marketingConsent
+            )
             await loadUserData(uid: uid)
         } catch {
             self.error = AppError.from(error)
@@ -125,13 +130,18 @@ final class AppState {
     #endif
 
     // MARK: - Apple 로그인
-    func signInWithApple() async {
+    func signInWithApple(marketingConsent: Bool = false) async {
         isLoading = true
         self.error = nil
         defer { isLoading = false }
         do {
             let user = try await authRepository.signInWithApple()
             try await userRepository.createUserIfNeeded(user)
+            try? await userRepository.recordTermsAgreement(
+                userId: user.id,
+                version: AppConstants.Legal.termsVersion,
+                marketingConsent: marketingConsent
+            )
             await loadUserData(uid: user.id)
         } catch {
             self.error = AppError.from(error)
