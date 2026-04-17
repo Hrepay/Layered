@@ -152,8 +152,8 @@ enum MockData {
                 title: "피크닉 + 자전거",
                 description: nil,
                 imageURL: nil,
-                voterIds: ["user-001", "user-002", "user-004"],
-                voteCount: 3
+                voterIds: ["user-001", "user-002"],
+                voteCount: 2
             ),
             PollOption(
                 id: "opt-2",
