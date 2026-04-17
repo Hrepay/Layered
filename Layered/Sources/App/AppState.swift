@@ -425,6 +425,31 @@ final class AppState {
         currentFamily?.rotationMode = mode
     }
 
+    // MARK: - 알림 설정
+    @MainActor
+    func loadNotificationSettings() async -> (enabled: Bool, plannerReminder: Bool, meetingCreated: Bool) {
+        guard let userId = currentUser?.id else { return (true, true, true) }
+        let db = FirebaseFirestore.Firestore.firestore()
+        let doc = try? await db.collection("users").document(userId).getDocument()
+        let data = doc?.data()
+        return (
+            enabled: data?["notificationsEnabled"] as? Bool ?? true,
+            plannerReminder: data?["notifyPlannerReminder"] as? Bool ?? true,
+            meetingCreated: data?["notifyMeetingCreated"] as? Bool ?? true
+        )
+    }
+
+    @MainActor
+    func updateNotificationSettings(enabled: Bool, plannerReminder: Bool, meetingCreated: Bool) async {
+        guard let userId = currentUser?.id else { return }
+        let db = FirebaseFirestore.Firestore.firestore()
+        try? await db.collection("users").document(userId).updateData([
+            "notificationsEnabled": enabled,
+            "notifyPlannerReminder": plannerReminder,
+            "notifyMeetingCreated": meetingCreated,
+        ])
+    }
+
     @MainActor
     func updateCurrentPlannerIndex(_ index: Int) async throws {
         guard let familyId = currentFamily?.id else { throw AppStateError.noFamily }
