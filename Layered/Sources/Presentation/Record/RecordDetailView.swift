@@ -134,23 +134,25 @@ struct RecordDetailView: View {
 
                     // MARK: - 기록하기 버튼 (내 기록 없을 때)
                     if !hasMyRecord {
+                        let isPast = meeting.meetingDate <= Date()
                         Button(action: {
                             Haptic.medium()
                             showCreateRecord = true
                         }) {
                             HStack(spacing: 8) {
                                 Image(systemName: "plus.circle.fill")
-                                    .foregroundStyle(AppColors.primary)
-                                Text("나도 기록하기")
+                                    .foregroundStyle(isPast ? AppColors.primary : .gray)
+                                Text(isPast ? "나도 기록하기" : "모임 후 기록할 수 있어요")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
-                                    .foregroundStyle(.primary)
+                                    .foregroundStyle(isPast ? .primary : .secondary)
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
-                            .background(AppColors.primarySubtle)
+                            .background(isPast ? AppColors.primarySubtle : Color(.systemGray6))
                             .clipShape(RoundedRectangle(cornerRadius: 16))
                         }
+                        .disabled(!isPast)
                     }
                 }
                 .padding(.horizontal, 20)
@@ -207,6 +209,7 @@ struct RecordDetailView: View {
         )) { item in
             FullScreenImageView(url: item.url, onDismiss: { fullScreenImageURL = nil })
         }
+        .swipeBack(onBack: onBack)
     }
 
     private func loadRecords() async {
