@@ -3,8 +3,6 @@ import SwiftUI
 struct HistoryView: View {
     @Environment(AppState.self) private var appState: AppState
     @State private var selectedMeeting: Meeting?
-    @State private var meetingToDelete: Meeting?
-    @State private var showDeleteAlert = false
 
     private var meetings: [Meeting] { appState.meetings }
 
@@ -160,19 +158,6 @@ struct HistoryView: View {
                     Task { await appState.refreshMeetings() }
                 })
                 .environment(appState)
-            }
-            .alert("모임 삭제", isPresented: $showDeleteAlert) {
-                Button("취소", role: .cancel) {}
-                Button("삭제", role: .destructive) {
-                    if let meeting = meetingToDelete {
-                        Task {
-                            do { try await appState.deleteMeeting(meeting.id) }
-                            catch { appState.error = AppError.from(error) }
-                        }
-                    }
-                }
-            } message: {
-                Text("정말 삭제하시겠습니까?\n관련 기록도 함께 삭제됩니다.")
             }
         }
     }

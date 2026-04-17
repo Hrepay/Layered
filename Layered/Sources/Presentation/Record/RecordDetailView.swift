@@ -19,22 +19,33 @@ struct RecordDetailView: View {
         return records.contains { $0.memberId == userId }
     }
 
+    private var canDeleteMeeting: Bool {
+        guard let userId = appState.currentUser?.id else { return false }
+        if meeting.plannerId == userId { return true }
+        return appState.members.first(where: { $0.id == userId })?.role == .admin
+    }
+
+    private var trailingMenu: AnyView? {
+        guard canDeleteMeeting else { return nil }
+        return AnyView(
+            Menu {
+                Button("모임 삭제", systemImage: "trash.fill", role: .destructive) {
+                    showMeetingDeleteAlert = true
+                }
+            } label: {
+                Image(systemName: "ellipsis.circle")
+                    .font(.title3)
+                    .foregroundStyle(.primary)
+            }
+        )
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             NavBar(
                 title: "모임 기록",
                 backAction: onBack,
-                trailingMenu: AnyView(
-                    Menu {
-                        Button("모임 삭제", systemImage: "trash.fill", role: .destructive) {
-                            showMeetingDeleteAlert = true
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                            .font(.title3)
-                            .foregroundStyle(.primary)
-                    }
-                )
+                trailingMenu: trailingMenu
             )
 
             ScrollView {
@@ -212,7 +223,7 @@ struct RecordDetailView: View {
                 }
             }
         } message: {
-            Text("정말 삭제하시겠습니까?\n관련 기록도 함께 삭제됩니다.")
+            Text("모임과 관련된 모든 기록·사진이 영구 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.")
         }
         .fullScreenCover(item: Binding(
             get: { fullScreenImageURL.map { FullScreenImageItem(url: $0) } },
