@@ -186,7 +186,7 @@ enum MockData {
                 "asset://MockHangang1",
                 "asset://MockHangang2",
             ],
-            comment: "오랜만에 한강 나와서 자전거도 타고 돗자리 깔고 간식도 먹었다. 날씨까지 완벽했음.",
+            comment: "오랜만에 한강 와서 자전거 타니까 진짜 재밌네 ㅋㅋ 다음엔 형도 꼭 데려오자",
             rating: 5,
             createdAt: daysFromNow(-5, hour: 21),
             updatedAt: daysFromNow(-5, hour: 21)
@@ -198,7 +198,7 @@ enum MockData {
             photos: [
                 "asset://MockMomDog",
             ],
-            comment: "강아지들 데리고 나왔는데 너무 신나 했어. 다음에 또 오자~",
+            comment: "뿌꾸랑 코코 너무 좋아하더라 ㅎㅎ 다음에 또 오자~",
             rating: 5,
             createdAt: daysFromNow(-5, hour: 20, minute: 30),
             updatedAt: daysFromNow(-5, hour: 20, minute: 30)
@@ -208,7 +208,7 @@ enum MockData {
             memberId: "user-003",
             memberName: "아빠",
             photos: [],
-            comment: "바람 시원하고 산책하기 딱 좋은 날씨였다. 다음에도 한강으로.",
+            comment: "자전거 타기 딱 좋은 날씨였네. 다음에도 한강으로 가자.",
             rating: 4,
             createdAt: daysFromNow(-4, hour: 20),
             updatedAt: daysFromNow(-4, hour: 20)
