@@ -22,11 +22,28 @@ struct TermsAgreementSheet: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // MARK: - 핸들 (바텀시트 느낌)
-            Capsule()
-                .fill(Color(.systemGray4))
-                .frame(width: 36, height: 5)
-                .padding(.top, 8)
+            // MARK: - 핸들 + 취소 버튼
+            ZStack {
+                Capsule()
+                    .fill(Color(.systemGray4))
+                    .frame(width: 36, height: 5)
+
+                HStack {
+                    Spacer()
+                    Button {
+                        Haptic.light()
+                        onCancel()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.body)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.secondary)
+                            .frame(width: 32, height: 32)
+                    }
+                }
+                .padding(.horizontal, 8)
+            }
+            .padding(.top, 8)
 
             // MARK: - 타이틀
             VStack(alignment: .leading, spacing: 6) {
@@ -40,7 +57,7 @@ struct TermsAgreementSheet: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 24)
-            .padding(.top, 24)
+            .padding(.top, 16)
             .padding(.bottom, 20)
 
             // MARK: - 전체 동의
@@ -103,7 +120,7 @@ struct TermsAgreementSheet: View {
             SafariView(url: item.url)
                 .ignoresSafeArea()
         }
-        .interactiveDismissDisabled(true)
+        .interactiveDismissDisabled(false)
     }
 
     // MARK: - Subviews

@@ -106,11 +106,15 @@ struct LoginView: View {
                 appeared = true
             }
         }
-        .sheet(isPresented: $showAgreement) {
+        .sheet(isPresented: $showAgreement, onDismiss: {
+            // 스와이프로 내리거나 X 눌러 닫을 때도 안전하게 초기화
+            pendingAction = nil
+        }) {
             TermsAgreementSheet(
                 onConfirm: { marketingConsent in
+                    let action = pendingAction
                     showAgreement = false
-                    switch pendingAction {
+                    switch action {
                     case .apple:
                         onSignIn(marketingConsent)
                     case .debug(let email, let password):
@@ -118,11 +122,9 @@ struct LoginView: View {
                     case .none:
                         break
                     }
-                    pendingAction = nil
                 },
                 onCancel: {
                     showAgreement = false
-                    pendingAction = nil
                 }
             )
             .presentationDetents([.height(520)])
