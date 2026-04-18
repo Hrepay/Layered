@@ -17,11 +17,7 @@ struct RootView: View {
                     Task {
                         await appState.signInWithApple(marketingConsent: marketingConsent)
                     }
-                }, onDebugSignIn: { email, password, marketingConsent in
-                    Task {
-                        await appState.signInWithEmail(email: email, password: password, marketingConsent: marketingConsent)
-                    }
-                })
+                }, onDebugSignIn: debugSignInHandler)
             case .familySetup:
                 FamilySetupView(onJoined: { family in
                     appState.joinedFamily(family)
@@ -38,5 +34,17 @@ struct RootView: View {
         .onAppear {
             appState.checkAuthState()
         }
+    }
+
+    private var debugSignInHandler: ((String, String, Bool) -> Void)? {
+        #if DEBUG
+        return { email, password, marketingConsent in
+            Task {
+                await appState.signInWithEmail(email: email, password: password, marketingConsent: marketingConsent)
+            }
+        }
+        #else
+        return nil
+        #endif
     }
 }
