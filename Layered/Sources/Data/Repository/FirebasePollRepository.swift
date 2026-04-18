@@ -17,6 +17,7 @@ final class FirebasePollRepository: PollRepositoryProtocol {
                 "title": option.title,
                 "description": option.description as Any,
                 "imageURL": option.imageURL as Any,
+                "linkURL": option.linkURL as Any,
                 "voterIds": option.voterIds,
                 "voteCount": option.voteCount,
             ]
@@ -139,6 +140,7 @@ final class FirebasePollRepository: PollRepositoryProtocol {
                 title: opt["title"] as? String ?? "",
                 description: opt["description"] as? String,
                 imageURL: opt["imageURL"] as? String,
+                linkURL: opt["linkURL"] as? String,
                 voterIds: opt["voterIds"] as? [String] ?? [],
                 voteCount: opt["voteCount"] as? Int ?? 0
             )

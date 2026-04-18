@@ -4,8 +4,14 @@ struct CreatePollView: View {
     let onBack: () -> Void
     let onCreated: (Poll) -> Void
 
+    struct OptionDraft: Identifiable {
+        let id = UUID()
+        var title: String = ""
+        var link: String = ""
+    }
+
     @State private var question = ""
-    @State private var options: [String] = ["", ""]
+    @State private var options: [OptionDraft] = [OptionDraft(), OptionDraft()]
     @State private var isAnonymous = false
 
     var body: some View {
@@ -16,13 +22,16 @@ struct CreatePollView: View {
                 trailingText: "완료",
                 trailingAction: {
                     Haptic.medium()
-                    let pollOptions = options.enumerated().compactMap { index, title -> PollOption? in
+                    let pollOptions = options.compactMap { draft -> PollOption? in
+                        let title = draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
                         guard !title.isEmpty else { return nil }
+                        let linkURL = URLExtractor.firstURL(in: draft.link)?.absoluteString
                         return PollOption(
                             id: UUID().uuidString,
                             title: title,
                             description: nil,
                             imageURL: nil,
+                            linkURL: linkURL,
                             voterIds: [],
                             voteCount: 0
                         )
@@ -53,29 +62,60 @@ struct CreatePollView: View {
                     }
 
                     // MARK: - 선택지
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 16) {
                         Text("선택지")
                             .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundStyle(.secondary)
 
                         ForEach(options.indices, id: \.self) { index in
-                            HStack(spacing: 10) {
-                                AppTextField(
-                                    placeholder: "선택지 \(index + 1)",
-                                    text: $options[index]
-                                )
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack(spacing: 10) {
+                                    AppTextField(
+                                        placeholder: "선택지 \(index + 1)",
+                                        text: $options[index].title
+                                    )
 
-                                if options.count > 2 {
-                                    Button {
-                                        Haptic.light()
-                                        _ = withAnimation(.spring(duration: 0.25)) {
-                                            options.remove(at: index)
+                                    if options.count > 2 {
+                                        Button {
+                                            Haptic.light()
+                                            _ = withAnimation(.spring(duration: 0.25)) {
+                                                options.remove(at: index)
+                                            }
+                                        } label: {
+                                            Image(systemName: "minus.circle.fill")
+                                                .font(.title3)
+                                                .foregroundStyle(.red)
                                         }
-                                    } label: {
-                                        Image(systemName: "minus.circle.fill")
-                                            .font(.title3)
-                                            .foregroundStyle(.red)
+                                    }
+                                }
+
+                                AppTextField(
+                                    placeholder: "링크 (선택)",
+                                    text: $options[index].link
+                                )
+                                .textInputAutocapitalization(.never)
+                                .keyboardType(.URL)
+                                .onChange(of: options[index].link) { _, newValue in
+                                    handleLinkChange(index: index, newValue: newValue)
+                                }
+
+                                // 붙여넣은 즉시 인식한 URL을 칩으로 표시 (탭 시 열림)
+                                if let url = URLExtractor.firstURL(in: options[index].link) {
+                                    Link(destination: url) {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "link")
+                                                .font(.caption2)
+                                            Text(url.host ?? url.absoluteString)
+                                                .font(.caption)
+                                                .lineLimit(1)
+                                        }
+                                        .foregroundStyle(AppColors.primary)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 5)
+                                        .background(
+                                            Capsule().fill(AppColors.primarySubtle)
+                                        )
                                     }
                                 }
                             }
@@ -85,7 +125,7 @@ struct CreatePollView: View {
                             Button {
                                 Haptic.light()
                                 withAnimation(.spring(duration: 0.25)) {
-                                    options.append("")
+                                    options.append(OptionDraft())
                                 }
                             } label: {
                                 HStack(spacing: 6) {
@@ -129,7 +169,16 @@ struct CreatePollView: View {
     }
 
     private var isValid: Bool {
-        !question.isEmpty && options.filter({ !$0.isEmpty }).count >= 2
+        !question.isEmpty && options.filter({ !$0.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }).count >= 2
+    }
+
+    // 여러 줄·공백이 섞인 붙여넣기에서 URL만 뽑아 필드를 정규화.
+    private func handleLinkChange(index: Int, newValue: String) {
+        guard options.indices.contains(index) else { return }
+        if let extracted = URLExtractor.firstURL(in: newValue),
+           extracted.absoluteString != newValue {
+            options[index].link = extracted.absoluteString
+        }
     }
 }
 

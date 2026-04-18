@@ -152,6 +152,7 @@ enum MockData {
                 title: "피크닉 + 자전거",
                 description: nil,
                 imageURL: nil,
+                linkURL: nil,
                 voterIds: ["user-001", "user-002"],
                 voteCount: 2
             ),
@@ -160,6 +161,7 @@ enum MockData {
                 title: "배드민턴",
                 description: nil,
                 imageURL: nil,
+                linkURL: nil,
                 voterIds: ["user-003"],
                 voteCount: 1
             ),
@@ -168,6 +170,7 @@ enum MockData {
                 title: "강변 산책만",
                 description: nil,
                 imageURL: nil,
+                linkURL: nil,
                 voterIds: ["user-002"],
                 voteCount: 1
             ),

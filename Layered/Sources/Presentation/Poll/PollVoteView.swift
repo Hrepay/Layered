@@ -120,6 +120,27 @@ struct PollVoteView: View {
                                                 .font(.caption)
                                                 .foregroundStyle(.secondary)
                                         }
+
+                                        if let urlString = option.linkURL,
+                                           let url = URL(string: urlString) {
+                                            Link(destination: url) {
+                                                HStack(spacing: 4) {
+                                                    Image(systemName: "link")
+                                                        .font(.caption2)
+                                                    Text(url.host ?? urlString)
+                                                        .font(.caption)
+                                                        .lineLimit(1)
+                                                }
+                                                .foregroundStyle(AppColors.primary)
+                                                .padding(.horizontal, 10)
+                                                .padding(.vertical, 5)
+                                                .background(
+                                                    Capsule()
+                                                        .fill(AppColors.primarySubtle)
+                                                )
+                                            }
+                                            .padding(.top, 2)
+                                        }
                                     }
 
                                     Spacer()

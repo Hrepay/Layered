@@ -14,6 +14,7 @@ struct PollOption: Identifiable, Codable {
     var title: String
     var description: String?
     var imageURL: String?
+    var linkURL: String?
     var voterIds: [String]
     var voteCount: Int
 }
