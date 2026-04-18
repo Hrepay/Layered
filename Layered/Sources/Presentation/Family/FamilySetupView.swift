@@ -61,6 +61,8 @@ struct FamilySetupView: View {
                             }
                             // 프로필 완료 후 실제 가정 참여
                             try await appState.familyRepository.joinFamily(familyId: family.id, userId: userId, userName: profileName)
+                            // 이전에 이 가정에 있다가 나간 이력이 있으면 과거 콘텐츠의 "Guest" 이름을 현재 이름으로 복원
+                            try? await appState.restoreUserContentName(familyId: family.id, userId: userId, newName: profileName)
                             appState.isLoading = false
                             onJoined(family)
                         } catch {

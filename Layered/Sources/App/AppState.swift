@@ -510,22 +510,30 @@ final class AppState {
     /// 나간 구성원의 meetings.plannerName / records.memberName을 "Guest"로 치환.
     /// 데이터(모임·기록) 자체는 보존하되 UI에서 익명 처리되도록 함.
     private func anonymizeUserContent(familyId: String, userId: String) async throws {
+        try await renameUserContent(familyId: familyId, userId: userId, newName: "Guest")
+    }
+
+    /// 재참여한 구성원의 과거 모임·기록의 plannerName / memberName을 현재 이름으로 복원.
+    /// "Guest"였든 다른 값이었든 무조건 최신 이름으로 덮어씀 → UI 일관성 확보.
+    func restoreUserContentName(familyId: String, userId: String, newName: String) async throws {
+        try await renameUserContent(familyId: familyId, userId: userId, newName: newName)
+    }
+
+    private func renameUserContent(familyId: String, userId: String, newName: String) async throws {
         let db = Firestore.firestore()
         let meetingsRef = db.collection("families").document(familyId).collection("meetings")
 
         let meetingsSnapshot = try await meetingsRef.whereField("plannerId", isEqualTo: userId).getDocuments()
         for doc in meetingsSnapshot.documents {
-            try? await doc.reference.updateData(["plannerName": "Guest"])
+            try? await doc.reference.updateData(["plannerName": newName])
         }
 
-        // records는 meetings의 서브컬렉션이라 collectionGroup 쿼리로 스캔
         let recordsSnapshot = try? await db.collectionGroup("records")
             .whereField("memberId", isEqualTo: userId)
             .getDocuments()
         for doc in recordsSnapshot?.documents ?? [] {
-            // 해당 가정 소속 records만 업데이트 (경로 필터)
             guard doc.reference.path.contains("families/\(familyId)/") else { continue }
-            try? await doc.reference.updateData(["memberName": "Guest"])
+            try? await doc.reference.updateData(["memberName": newName])
         }
     }
 
