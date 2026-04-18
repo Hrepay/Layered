@@ -111,6 +111,7 @@ struct FamilySetupView: View {
     }
 
     @State private var showLogoutAlert = false
+    @State private var showDeleteAccountAlert = false
 
     private var familySelectView: some View {
         VStack(spacing: 0) {
@@ -155,15 +156,31 @@ struct FamilySetupView: View {
 
             Spacer()
 
-            Button {
-                Haptic.light()
-                showLogoutAlert = true
-            } label: {
-                Text("로그아웃")
+            HStack(spacing: 24) {
+                Button {
+                    Haptic.light()
+                    showLogoutAlert = true
+                } label: {
+                    Text("로그아웃")
+                        .font(.subheadline)
+                        .foregroundStyle(Color(.darkGray))
+                }
+                .buttonStyle(.plain)
+
+                Text("·")
                     .font(.subheadline)
-                    .foregroundStyle(Color(.darkGray))
+                    .foregroundStyle(.tertiary)
+
+                Button {
+                    Haptic.light()
+                    showDeleteAccountAlert = true
+                } label: {
+                    Text("계정 삭제")
+                        .font(.subheadline)
+                        .foregroundStyle(Color(.darkGray))
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
             .padding(.bottom, 32)
         }
         .alert("로그아웃", isPresented: $showLogoutAlert) {
@@ -173,6 +190,20 @@ struct FamilySetupView: View {
             }
         } message: {
             Text("로그아웃하시겠습니까?")
+        }
+        .alert("계정 삭제", isPresented: $showDeleteAccountAlert) {
+            Button("취소", role: .cancel) {}
+            Button("계속", role: .destructive) {
+                Task {
+                    do {
+                        try await appState.deleteAccount()
+                    } catch {
+                        appState.error = AppError.from(error)
+                    }
+                }
+            }
+        } message: {
+            Text("모든 데이터가 영구 삭제됩니다.\n본인 확인을 위해 이어서 Apple 로그인이 한 번 표시됩니다.")
         }
     }
 }
