@@ -74,3 +74,6 @@ Tuist/.build
 # Claude Code
 .agents/
 skills-lock.json
+
+# 로컬 전용 출시 메타데이터 (App Store Connect 복붙용)
+APP_STORE_METADATA.md
