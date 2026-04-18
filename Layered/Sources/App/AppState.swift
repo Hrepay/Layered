@@ -17,7 +17,7 @@ final class AppState {
     // MARK: - Mock 모드 스위치 (스크린샷·데모용)
     #if DEBUG
     /// true로 바꾸고 빌드하면 Firebase 대신 MockData로 홈부터 바로 진입. App Store 스크린샷 찍을 때 사용.
-    nonisolated(unsafe) static var useMockForScreenshots = true
+    nonisolated(unsafe) static var useMockForScreenshots = false
     #endif
 
     private var shouldUseMock: Bool {
