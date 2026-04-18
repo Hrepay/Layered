@@ -6,6 +6,8 @@ import CryptoKit
 final class FirebaseAuthRepository: NSObject, AuthRepositoryProtocol {
     private var currentNonce: String?
     private var signInContinuation: CheckedContinuation<User, Error>?
+    /// 가장 최근 Apple Sign-In에서 받은 authorization code. 계정 삭제 시 revokeToken 호출에 사용.
+    private var lastAuthorizationCode: String?
 
     func signInWithApple() async throws -> User {
         return try await withCheckedThrowingContinuation { continuation in
@@ -29,6 +31,12 @@ final class FirebaseAuthRepository: NSObject, AuthRepositoryProtocol {
 
     func deleteAccount() async throws {
         guard let firebaseUser = Auth.auth().currentUser else { return }
+        // Apple Sign-In token revoke — App Store Guideline 5.1.1(v) 요구사항.
+        // 최근 재인증에서 받은 authorization code가 있으면 Apple과의 연결도 해제.
+        if let code = lastAuthorizationCode {
+            try? await Auth.auth().revokeToken(withAuthorizationCode: code)
+            lastAuthorizationCode = nil
+        }
         try await firebaseUser.delete()
     }
 
@@ -72,6 +80,12 @@ extension FirebaseAuthRepository: ASAuthorizationControllerDelegate {
             signInContinuation?.resume(throwing: NSError(domain: "auth", code: -1, userInfo: [NSLocalizedDescriptionKey: "Apple 로그인 실패"]))
             signInContinuation = nil
             return
+        }
+
+        // 나중에 계정 삭제 시 revokeToken 호출을 위해 authorization code 보관.
+        if let authCodeData = appleIDCredential.authorizationCode,
+           let authCodeString = String(data: authCodeData, encoding: .utf8) {
+            lastAuthorizationCode = authCodeString
         }
 
         let credential = OAuthProvider.credential(
