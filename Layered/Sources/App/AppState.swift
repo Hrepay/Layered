@@ -211,10 +211,19 @@ final class AppState {
             currentUser = user
 
             if let familyId = user.familyId {
-                let family = try await familyRepository.getFamily(id: familyId)
-                currentFamily = family
-                await loadHomeData()
-                return .home
+                do {
+                    let family = try await familyRepository.getFamily(id: familyId)
+                    currentFamily = family
+                    await loadHomeData()
+                    return .home
+                } catch {
+                    // 가정이 이미 삭제됨 (관리자가 cascade 삭제한 경우 등) — stale familyId 해제
+                    var updated = user
+                    updated.familyId = nil
+                    try? await userRepository.updateUser(updated)
+                    currentUser = updated
+                    return .familySetup
+                }
             } else {
                 return .familySetup
             }

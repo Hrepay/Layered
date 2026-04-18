@@ -50,13 +50,15 @@ service cloud.firestore {
         allow delete: if isMemberOf(familyId)
           && (resource.data.plannerId == request.auth.uid || isAdminOf(familyId));
 
-        // 기록: 본인 기록만 수정/삭제
+        // 기록: 본인 기록만 수정, 삭제는 본인 또는 가정 관리자(가정/모임 삭제 cascade용)
         match /records/{recordId} {
           allow read: if isMemberOf(familyId);
           allow create: if isMemberOf(familyId)
             && request.resource.data.memberId == request.auth.uid;
-          allow update, delete: if isMemberOf(familyId)
+          allow update: if isMemberOf(familyId)
             && resource.data.memberId == request.auth.uid;
+          allow delete: if isMemberOf(familyId)
+            && (resource.data.memberId == request.auth.uid || isAdminOf(familyId));
         }
 
         // 투표: 가족 멤버는 조회/투표 가능
