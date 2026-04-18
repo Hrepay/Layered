@@ -112,6 +112,8 @@ struct RotationOrderView: View {
         }
         .toast($toast)
         .task {
+            // 다른 사람이 먼저 플래너/모드를 바꿨을 수 있으니 진입 시 재조회.
+            await appState.refreshCurrentFamily()
             await appState.refreshMembers()
             members = appState.members
             fixedPlannerIndex = appState.currentFamily?.currentPlannerIndex ?? 0

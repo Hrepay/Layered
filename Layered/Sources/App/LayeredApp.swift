@@ -92,7 +92,18 @@ class AppDelegate: NSObject, UIApplicationDelegate, MessagingDelegate, UNUserNot
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
+        NotificationCenter.default.post(name: .refreshFamilyData, object: nil)
         completionHandler([.banner, .badge, .sound])
+    }
+
+    // 알림 탭하고 앱으로 진입했을 때 홈 데이터 갱신.
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        NotificationCenter.default.post(name: .refreshFamilyData, object: nil)
+        completionHandler()
     }
 
     private func saveFCMToken(_ token: String) async {
@@ -100,6 +111,10 @@ class AppDelegate: NSObject, UIApplicationDelegate, MessagingDelegate, UNUserNot
         let db = Firestore.firestore()
         try? await db.collection("users").document(uid).updateData(["fcmToken": token])
     }
+}
+
+extension Notification.Name {
+    static let refreshFamilyData = Notification.Name("refreshFamilyData")
 }
 
 @main

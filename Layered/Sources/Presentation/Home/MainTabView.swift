@@ -2,12 +2,15 @@ import SwiftUI
 
 struct MainTabView: View {
     @Environment(AppState.self) private var appState
+    @Environment(\.scenePhase) private var scenePhase
+
+    @State private var selectedTab: Int = 0
 
     var body: some View {
         Group {
             if let family = appState.currentFamily,
                let user = appState.currentUser {
-                TabView {
+                TabView(selection: $selectedTab) {
                     HomeView(
                         family: family,
                         members: appState.members,
@@ -18,6 +21,7 @@ struct MainTabView: View {
                         Image(systemName: "house.fill")
                         Text("홈")
                     }
+                    .tag(0)
 
                     HistoryView()
                         .environment(appState)
@@ -25,6 +29,7 @@ struct MainTabView: View {
                             Image(systemName: "clock.fill")
                             Text("히스토리")
                         }
+                        .tag(1)
 
                     SettingsView()
                         .environment(appState)
@@ -32,10 +37,25 @@ struct MainTabView: View {
                             Image(systemName: "gearshape.fill")
                             Text("설정")
                         }
+                        .tag(2)
                 }
                 .tint(AppColors.primary)
                 .task {
                     await appState.loadHomeData()
+                }
+                .onChange(of: selectedTab) { _, newTab in
+                    // 홈(0) / 히스토리(1) 진입 시 최신 데이터 재조회
+                    if newTab == 0 || newTab == 1 {
+                        Task { await appState.loadHomeData() }
+                    }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .refreshFamilyData)) { _ in
+                    Task { await appState.loadHomeData() }
+                }
+                .onChange(of: scenePhase) { _, phase in
+                    if phase == .active {
+                        Task { await appState.loadHomeData() }
+                    }
                 }
             }
         }

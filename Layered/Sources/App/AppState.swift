@@ -275,11 +275,21 @@ final class AppState {
     func loadHomeData() async {
         guard let familyId = currentFamily?.id else { return }
         do {
+            await refreshCurrentFamily()
             meetings = try await meetingRepository.getMeetings(familyId: familyId)
             await refreshMembers()
             await checkMyRecords()
         } catch {
             self.error = AppError.from(error)
+        }
+    }
+
+    /// family 문서만 재조회. 다른 사람이 플래너/모드를 바꾼 경우 동기화용.
+    @MainActor
+    func refreshCurrentFamily() async {
+        guard let familyId = currentFamily?.id else { return }
+        if let refreshed = try? await familyRepository.getFamily(id: familyId) {
+            currentFamily = refreshed
         }
     }
 
