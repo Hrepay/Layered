@@ -622,26 +622,33 @@ final class AppState {
     }
 
     // MARK: - 계정 삭제
-    func deleteAccount() async {
+    enum DeleteAccountResult {
+        case success
+        case needsReauth
+    }
+
+    /// 일반 삭제 시도. 최근 로그인 세션이 없으면 .needsReauth 반환해 UI가 사용자에게 명시적으로 안내 가능.
+    func deleteAccount() async throws -> DeleteAccountResult {
         isLoading = true
         defer { isLoading = false }
         do {
             try await cleanupUserDataBeforeAuthDeletion()
             try await authRepository.deleteAccount()
             finalizeAccountDeletion()
+            return .success
         } catch let error as NSError where error.code == 17014 {
-            // requiresRecentLogin: Apple 재인증 후 재시도
-            do {
-                _ = try await authRepository.signInWithApple()
-                try await cleanupUserDataBeforeAuthDeletion()
-                try await authRepository.deleteAccount()
-                finalizeAccountDeletion()
-            } catch {
-                self.error = AppError.from(error)
-            }
-        } catch {
-            self.error = AppError.from(error)
+            return .needsReauth
         }
+    }
+
+    /// 사용자 확인 후 Apple 재인증과 함께 삭제 진행.
+    func deleteAccountWithReauth() async throws {
+        isLoading = true
+        defer { isLoading = false }
+        _ = try await authRepository.signInWithApple()
+        try await cleanupUserDataBeforeAuthDeletion()
+        try await authRepository.deleteAccount()
+        finalizeAccountDeletion()
     }
 
     /// Auth 삭제 전에 사용자와 관련된 Firestore·Storage 데이터를 모두 제거.
