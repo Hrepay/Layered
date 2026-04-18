@@ -54,8 +54,11 @@ struct FamilySetupView: View {
                         do {
                             if let image {
                                 try await appState.uploadProfileImage(image)
+                                try await appState.updateProfile(name: profileName, profileImageURL: appState.currentUser?.profileImageURL)
+                            } else {
+                                // 이미지 미선택 → 기본 아바타(이니셜)로 리셋
+                                try await appState.updateProfile(name: profileName, profileImageURL: nil)
                             }
-                            try await appState.updateProfile(name: profileName, profileImageURL: appState.currentUser?.profileImageURL)
                             // 프로필 완료 후 실제 가정 참여
                             try await appState.familyRepository.joinFamily(familyId: family.id, userId: userId, userName: profileName)
                             appState.isLoading = false
@@ -76,12 +79,14 @@ struct FamilySetupView: View {
         appState.isLoading = true
         Task {
             do {
-                // 프로필 사진 업로드
                 if let image {
+                    // 프로필 사진 업로드 후 최신 URL로 이름과 함께 저장
                     try await appState.uploadProfileImage(image)
+                    try await appState.updateProfile(name: profileName, profileImageURL: appState.currentUser?.profileImageURL)
+                } else {
+                    // 이미지 미선택 → 기본 아바타(이니셜)로 리셋
+                    try await appState.updateProfile(name: profileName, profileImageURL: nil)
                 }
-                // 프로필 이름 업데이트
-                try await appState.updateProfile(name: profileName, profileImageURL: appState.currentUser?.profileImageURL)
                 // 가정 생성
                 let family = try await appState.familyRepository.createFamily(
                     name: familyName,
