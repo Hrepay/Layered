@@ -108,6 +108,8 @@ struct FamilySetupView: View {
         }
     }
 
+    @State private var showLogoutAlert = false
+
     private var familySelectView: some View {
         VStack(spacing: 0) {
             Spacer()
@@ -150,6 +152,25 @@ struct FamilySetupView: View {
             .padding(.horizontal, 24)
 
             Spacer()
+
+            Button {
+                Haptic.light()
+                showLogoutAlert = true
+            } label: {
+                Text("로그아웃")
+                    .font(.subheadline)
+                    .foregroundStyle(Color(.darkGray))
+            }
+            .buttonStyle(.plain)
+            .padding(.bottom, 32)
+        }
+        .alert("로그아웃", isPresented: $showLogoutAlert) {
+            Button("취소", role: .cancel) {}
+            Button("로그아웃", role: .destructive) {
+                appState.signOut()
+            }
+        } message: {
+            Text("로그아웃하시겠습니까?")
         }
     }
 }
