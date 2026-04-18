@@ -1,8 +1,10 @@
 import Foundation
 import FirebaseFirestore
+import FirebaseStorage
 
 final class FirebaseMeetingRepository: MeetingRepositoryProtocol {
     private let db = Firestore.firestore()
+    private let storage = Storage.storage()
 
     private func meetingsRef(familyId: String) -> CollectionReference {
         db.collection("families").document(familyId).collection("meetings")
@@ -75,7 +77,35 @@ final class FirebaseMeetingRepository: MeetingRepositoryProtocol {
     }
 
     func deleteMeeting(familyId: String, meetingId: String) async throws {
-        try await meetingsRef(familyId: familyId).document(meetingId).delete()
+        let meetingRef = meetingsRef(familyId: familyId).document(meetingId)
+
+        // 1. polls 서브컬렉션 전부 삭제
+        let pollsSnapshot = try await meetingRef.collection("polls").getDocuments()
+        for pollDoc in pollsSnapshot.documents {
+            try? await pollDoc.reference.delete()
+        }
+
+        // 2. records 서브컬렉션 — 사진 URL까지 전부 Storage에서 삭제 후 문서 삭제
+        let recordsSnapshot = try await meetingRef.collection("records").getDocuments()
+        for recordDoc in recordsSnapshot.documents {
+            if let photos = recordDoc.data()["photos"] as? [String] {
+                for urlString in photos {
+                    try? await deletePhotoByURL(urlString)
+                }
+            }
+            try? await recordDoc.reference.delete()
+        }
+
+        // 3. meeting 문서 자체 삭제
+        try await meetingRef.delete()
+    }
+
+    /// Firebase Storage 다운로드 URL로부터 참조를 구성해 삭제.
+    /// Mock asset:// 이나 picsum 같은 외부 URL은 무시.
+    private func deletePhotoByURL(_ urlString: String) async throws {
+        guard urlString.contains("firebasestorage") else { return }
+        let ref = storage.reference(forURL: urlString)
+        try await ref.delete()
     }
 
     // MARK: - Helpers

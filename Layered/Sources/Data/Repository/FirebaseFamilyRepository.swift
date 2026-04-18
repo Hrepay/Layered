@@ -1,8 +1,10 @@
 import Foundation
 import FirebaseFirestore
+import FirebaseStorage
 
 final class FirebaseFamilyRepository: FamilyRepositoryProtocol {
     private let db = Firestore.firestore()
+    private let storage = Storage.storage()
     private var familiesRef: CollectionReference { db.collection("families") }
 
     func createFamily(name: String, adminId: String) async throws -> Family {
@@ -63,7 +65,53 @@ final class FirebaseFamilyRepository: FamilyRepositoryProtocol {
     }
 
     func deleteFamily(id: String) async throws {
-        try await familiesRef.document(id).delete()
+        let familyRef = familiesRef.document(id)
+
+        // 1. meetings 전체 순회 — 각 모임의 polls·records·사진까지 cascade 삭제
+        let meetingsSnapshot = try await familyRef.collection("meetings").getDocuments()
+        for meetingDoc in meetingsSnapshot.documents {
+            let meetingRef = meetingDoc.reference
+
+            // polls 삭제
+            let pollsSnapshot = try? await meetingRef.collection("polls").getDocuments()
+            for pollDoc in pollsSnapshot?.documents ?? [] {
+                try? await pollDoc.reference.delete()
+            }
+
+            // records 사진 + 문서 삭제
+            let recordsSnapshot = try? await meetingRef.collection("records").getDocuments()
+            for recordDoc in recordsSnapshot?.documents ?? [] {
+                if let photos = recordDoc.data()["photos"] as? [String] {
+                    for urlString in photos {
+                        try? await deletePhotoByURL(urlString)
+                    }
+                }
+                try? await recordDoc.reference.delete()
+            }
+
+            // 모임 문서 삭제
+            try? await meetingRef.delete()
+        }
+
+        // 2. members 순회 — 각 유저의 familyId 초기화 + 멤버 문서 삭제
+        let membersSnapshot = try await familyRef.collection("members").getDocuments()
+        for memberDoc in membersSnapshot.documents {
+            // 유저 문서의 familyId 제거 (규칙상 본인만 쓸 수 있으나, 탈퇴 시 관리자가 일괄 처리)
+            try? await db.collection("users").document(memberDoc.documentID).updateData([
+                "familyId": FieldValue.delete()
+            ])
+            try? await memberDoc.reference.delete()
+        }
+
+        // 3. family 문서 삭제
+        try await familyRef.delete()
+    }
+
+    /// Firebase Storage 다운로드 URL로부터 참조를 구성해 삭제.
+    private func deletePhotoByURL(_ urlString: String) async throws {
+        guard urlString.contains("firebasestorage") else { return }
+        let ref = storage.reference(forURL: urlString)
+        try await ref.delete()
     }
 
     func updateFamilyName(familyId: String, name: String) async throws {

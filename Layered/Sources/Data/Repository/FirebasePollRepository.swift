@@ -65,44 +65,60 @@ final class FirebasePollRepository: PollRepositoryProtocol {
 
     func vote(familyId: String, meetingId: String, pollId: String, optionId: String, userId: String) async throws {
         let ref = pollsRef(familyId: familyId, meetingId: meetingId).document(pollId)
-        let doc = try await ref.getDocument()
-        guard let data = doc.data(),
-              var options = data["options"] as? [[String: Any]] else { return }
+        // 트랜잭션으로 read-modify-write 원자화. 동시 투표 시 표 유실 방지.
+        _ = try await db.runTransaction { transaction, errorPointer in
+            let snapshot: DocumentSnapshot
+            do {
+                snapshot = try transaction.getDocument(ref)
+            } catch {
+                errorPointer?.pointee = error as NSError
+                return nil
+            }
+            guard let data = snapshot.data(),
+                  var options = data["options"] as? [[String: Any]] else { return nil }
+            let isAnonymous = data["isAnonymous"] as? Bool ?? false
 
-        let isAnonymous = data["isAnonymous"] as? Bool ?? false
-
-        for i in options.indices {
-            guard let id = options[i]["id"] as? String, id == optionId else { continue }
-            if isAnonymous {
-                options[i]["voteCount"] = (options[i]["voteCount"] as? Int ?? 0) + 1
-            } else {
-                var voterIds = options[i]["voterIds"] as? [String] ?? []
-                if !voterIds.contains(userId) {
-                    voterIds.append(userId)
-                    options[i]["voterIds"] = voterIds
-                    options[i]["voteCount"] = voterIds.count
+            for i in options.indices {
+                guard let id = options[i]["id"] as? String, id == optionId else { continue }
+                if isAnonymous {
+                    options[i]["voteCount"] = (options[i]["voteCount"] as? Int ?? 0) + 1
+                } else {
+                    var voterIds = options[i]["voterIds"] as? [String] ?? []
+                    if !voterIds.contains(userId) {
+                        voterIds.append(userId)
+                        options[i]["voterIds"] = voterIds
+                        options[i]["voteCount"] = voterIds.count
+                    }
                 }
             }
+            transaction.updateData(["options": options], forDocument: ref)
+            return nil
         }
-
-        try await ref.updateData(["options": options])
     }
 
     func removeVote(familyId: String, meetingId: String, pollId: String, optionId: String, userId: String) async throws {
         let ref = pollsRef(familyId: familyId, meetingId: meetingId).document(pollId)
-        let doc = try await ref.getDocument()
-        guard let data = doc.data(),
-              var options = data["options"] as? [[String: Any]] else { return }
+        _ = try await db.runTransaction { transaction, errorPointer in
+            let snapshot: DocumentSnapshot
+            do {
+                snapshot = try transaction.getDocument(ref)
+            } catch {
+                errorPointer?.pointee = error as NSError
+                return nil
+            }
+            guard let data = snapshot.data(),
+                  var options = data["options"] as? [[String: Any]] else { return nil }
 
-        for i in options.indices {
-            guard let id = options[i]["id"] as? String, id == optionId else { continue }
-            var voterIds = options[i]["voterIds"] as? [String] ?? []
-            voterIds.removeAll { $0 == userId }
-            options[i]["voterIds"] = voterIds
-            options[i]["voteCount"] = max(0, (options[i]["voteCount"] as? Int ?? 1) - 1)
+            for i in options.indices {
+                guard let id = options[i]["id"] as? String, id == optionId else { continue }
+                var voterIds = options[i]["voterIds"] as? [String] ?? []
+                voterIds.removeAll { $0 == userId }
+                options[i]["voterIds"] = voterIds
+                options[i]["voteCount"] = max(0, (options[i]["voteCount"] as? Int ?? 1) - 1)
+            }
+            transaction.updateData(["options": options], forDocument: ref)
+            return nil
         }
-
-        try await ref.updateData(["options": options])
     }
 
     func deletePoll(familyId: String, meetingId: String, pollId: String) async throws {

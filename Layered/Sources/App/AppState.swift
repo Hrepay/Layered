@@ -238,9 +238,10 @@ final class AppState {
     private func refreshFCMToken(uid: String) async {
         do {
             let token = try await Messaging.messaging().token()
+            // setData(merge:)로 문서가 없을 때도 생성. 첫 로그인 레이스 컨디션 방어.
             try await Firestore.firestore()
                 .collection("users").document(uid)
-                .updateData(["fcmToken": token])
+                .setData(["fcmToken": token], merge: true)
         } catch {
             // 실패해도 앱 사용은 계속 가능하므로 무시
         }
@@ -591,12 +592,14 @@ final class AppState {
         isLoading = true
         defer { isLoading = false }
         do {
+            try await cleanupUserDataBeforeAuthDeletion()
             try await authRepository.deleteAccount()
             finalizeAccountDeletion()
         } catch let error as NSError where error.code == 17014 {
             // requiresRecentLogin: Apple 재인증 후 재시도
             do {
                 _ = try await authRepository.signInWithApple()
+                try await cleanupUserDataBeforeAuthDeletion()
                 try await authRepository.deleteAccount()
                 finalizeAccountDeletion()
             } catch {
@@ -605,6 +608,23 @@ final class AppState {
         } catch {
             self.error = AppError.from(error)
         }
+    }
+
+    /// Auth 삭제 전에 사용자와 관련된 Firestore·Storage 데이터를 모두 제거.
+    /// 순서가 중요: Auth가 없어지면 보안 규칙상 문서 수정 권한도 사라짐.
+    private func cleanupUserDataBeforeAuthDeletion() async throws {
+        guard let userId = currentUser?.id else { return }
+
+        // 1. 가족에 속해있으면 먼저 나가기 (관리자 이전·마지막 멤버면 가정 자동 삭제)
+        if currentFamily != nil {
+            try? await leaveFamily()
+        }
+
+        // 2. Storage 프로필 이미지 삭제
+        try? await storageRepository.deleteImage(path: "users/\(userId)/profile.jpg")
+
+        // 3. Firestore users 문서 삭제
+        try? await Firestore.firestore().collection("users").document(userId).delete()
     }
 
     private func finalizeAccountDeletion() {
