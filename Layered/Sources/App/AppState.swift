@@ -592,14 +592,27 @@ final class AppState {
         defer { isLoading = false }
         do {
             try await authRepository.deleteAccount()
-            currentUser = nil
-            currentFamily = nil
-            members = []
-            meetings = []
-            authState = .login
+            finalizeAccountDeletion()
+        } catch let error as NSError where error.code == 17014 {
+            // requiresRecentLogin: Apple 재인증 후 재시도
+            do {
+                _ = try await authRepository.signInWithApple()
+                try await authRepository.deleteAccount()
+                finalizeAccountDeletion()
+            } catch {
+                self.error = AppError.from(error)
+            }
         } catch {
             self.error = AppError.from(error)
         }
+    }
+
+    private func finalizeAccountDeletion() {
+        currentUser = nil
+        currentFamily = nil
+        members = []
+        meetings = []
+        authState = .login
     }
 }
 
