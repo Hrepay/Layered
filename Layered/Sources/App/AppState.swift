@@ -490,6 +490,8 @@ final class AppState {
                     try await memberRepository.transferAdmin(familyId: familyId, newAdminId: nextAdmin.id)
                 }
             }
+            // 나간 사람의 모임 plannerName·기록 memberName을 "Guest"로 비정규화 필드 업데이트
+            try? await anonymizeUserContent(familyId: familyId, userId: userId)
             try await memberRepository.removeMember(familyId: familyId, memberId: userId)
         }
 
@@ -504,10 +506,33 @@ final class AppState {
         authState = .familySetup
     }
 
+    /// 나간 구성원의 meetings.plannerName / records.memberName을 "Guest"로 치환.
+    /// 데이터(모임·기록) 자체는 보존하되 UI에서 익명 처리되도록 함.
+    private func anonymizeUserContent(familyId: String, userId: String) async throws {
+        let db = Firestore.firestore()
+        let meetingsRef = db.collection("families").document(familyId).collection("meetings")
+
+        let meetingsSnapshot = try await meetingsRef.whereField("plannerId", isEqualTo: userId).getDocuments()
+        for doc in meetingsSnapshot.documents {
+            try? await doc.reference.updateData(["plannerName": "Guest"])
+        }
+
+        // records는 meetings의 서브컬렉션이라 collectionGroup 쿼리로 스캔
+        let recordsSnapshot = try? await db.collectionGroup("records")
+            .whereField("memberId", isEqualTo: userId)
+            .getDocuments()
+        for doc in recordsSnapshot?.documents ?? [] {
+            // 해당 가정 소속 records만 업데이트 (경로 필터)
+            guard doc.reference.path.contains("families/\(familyId)/") else { continue }
+            try? await doc.reference.updateData(["memberName": "Guest"])
+        }
+    }
+
     func deleteFamily() async throws {
         guard let family = currentFamily,
               let userId = currentUser?.id else { throw AppStateError.noFamily }
         guard family.adminId == userId else { throw AppStateError.notAdmin }
+        guard members.count <= 1 else { throw AppStateError.familyHasOtherMembers }
         try await familyRepository.deleteFamily(id: family.id)
         if var updatedUser = currentUser {
             updatedUser.familyId = nil
@@ -649,11 +674,14 @@ final class AppState {
 enum AppStateError: LocalizedError {
     case noFamily
     case notAdmin
+    case familyHasOtherMembers
 
     var errorDescription: String? {
         switch self {
         case .noFamily: return "가정 정보를 찾을 수 없습니다"
         case .notAdmin: return "관리자만 수행할 수 있는 작업입니다"
+        case .familyHasOtherMembers:
+            return "다른 구성원이 있어 가정을 삭제할 수 없습니다.\n먼저 구성원을 내보내거나 나가기를 요청해주세요."
         }
     }
 }

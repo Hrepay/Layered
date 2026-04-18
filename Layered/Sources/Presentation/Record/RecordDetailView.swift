@@ -22,8 +22,7 @@ struct RecordDetailView: View {
 
     private var canDeleteMeeting: Bool {
         guard let userId = appState.currentUser?.id else { return false }
-        if meeting.plannerId == userId { return true }
-        return appState.members.first(where: { $0.id == userId })?.role == .admin
+        return meeting.plannerId == userId
     }
 
     private var trailingMenu: AnyView? {

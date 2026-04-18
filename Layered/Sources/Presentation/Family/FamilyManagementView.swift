@@ -6,6 +6,7 @@ struct FamilyManagementView: View {
 
     @State private var showLeaveAlert = false
     @State private var showDeleteAlert = false
+    @State private var showDeleteBlockedAlert = false
     @State private var showRenameAlert = false
     @State private var newFamilyName = ""
 
@@ -53,7 +54,11 @@ struct FamilyManagementView: View {
                         iconColor: AppColors.primary,
                         title: "가정 삭제"
                     ) {
-                        showDeleteAlert = true
+                        if appState.members.count > 1 {
+                            showDeleteBlockedAlert = true
+                        } else {
+                            showDeleteAlert = true
+                        }
                     }
                 }
             }
@@ -98,6 +103,11 @@ struct FamilyManagementView: View {
             }
         } message: {
             Text("모든 데이터가 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.")
+        }
+        .alert("삭제할 수 없어요", isPresented: $showDeleteBlockedAlert) {
+            Button("확인", role: .cancel) {}
+        } message: {
+            Text("다른 구성원이 있어 가정을 삭제할 수 없습니다.\n먼저 다른 구성원을 강퇴하거나 나가기를 요청해주세요.")
         }
         .swipeBack(onBack: onBack)
     }

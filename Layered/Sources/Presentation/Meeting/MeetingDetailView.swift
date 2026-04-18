@@ -25,13 +25,21 @@ struct MeetingDetailView: View {
         self.showsActionMenu = showsActionMenu
     }
 
+    private var isPlanner: Bool {
+        meeting.plannerId == appState.currentUser?.id
+    }
+
     private var actionMenu: AnyView? {
         guard showsActionMenu else { return nil }
         return AnyView(
             Menu {
+                // 모임 수정은 모든 구성원 가능 (노션 핵심 기능 명세)
                 Button("수정", systemImage: "pencil") { showEdit = true }
-                Button("삭제", systemImage: "trash", role: .destructive) {
-                    showDeleteAlert = true
+                // 모임 삭제는 플래너 본인만
+                if isPlanner {
+                    Button("삭제", systemImage: "trash", role: .destructive) {
+                        showDeleteAlert = true
+                    }
                 }
             } label: {
                 Image(systemName: "ellipsis.circle")

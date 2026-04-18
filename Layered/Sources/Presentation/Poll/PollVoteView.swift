@@ -258,7 +258,7 @@ struct PollVoteView: View {
     private func voterNames(for ids: [String]) -> String {
         let members = appState.members
         return ids.map { id in
-            members.first(where: { $0.id == id })?.name ?? id
+            members.first(where: { $0.id == id })?.name ?? "Guest"
         }.joined(separator: ", ")
     }
 }
