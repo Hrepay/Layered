@@ -481,13 +481,14 @@ final class AppState {
             // 마지막 구성원이 나가면 가정 자체를 삭제
             try await familyRepository.deleteFamily(id: familyId)
         } else {
-            // 관리자가 나가면 rotationOrder 기준 다음 구성원에게 역할 자동 이전
+            // 관리자가 나가면 rotationOrder 기준 다음 구성원에게 역할 자동 이전.
+            // 이전이 실패해도 멤버 탈퇴는 계속 진행해 "관리자만 이전된 좀비 상태" 방지.
             if family.adminId == userId {
                 if let nextAdmin = members
                     .filter({ $0.id != userId })
                     .sorted(by: { $0.rotationOrder < $1.rotationOrder })
                     .first {
-                    try await memberRepository.transferAdmin(familyId: familyId, newAdminId: nextAdmin.id)
+                    try? await memberRepository.transferAdmin(familyId: familyId, newAdminId: nextAdmin.id)
                 }
             }
             // 나간 사람의 모임 plannerName·기록 memberName을 "Guest"로 비정규화 필드 업데이트

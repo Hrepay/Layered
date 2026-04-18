@@ -1,8 +1,10 @@
 import Foundation
 import FirebaseFirestore
+import FirebaseStorage
 
 final class FirebaseRecordRepository: RecordRepositoryProtocol {
     private let db = Firestore.firestore()
+    private let storage = Storage.storage()
 
     private func recordsRef(familyId: String, meetingId: String) -> CollectionReference {
         db.collection("families").document(familyId)
@@ -54,7 +56,24 @@ final class FirebaseRecordRepository: RecordRepositoryProtocol {
     }
 
     func deleteRecord(familyId: String, meetingId: String, recordId: String) async throws {
-        try await recordsRef(familyId: familyId, meetingId: meetingId).document(recordId).delete()
+        let recordRef = recordsRef(familyId: familyId, meetingId: meetingId).document(recordId)
+
+        // 문서 먼저 조회해 사진 URL 확보 후 Storage에서 삭제. 실패해도 기록 문서 삭제는 진행.
+        if let data = try? await recordRef.getDocument().data(),
+           let photos = data["photos"] as? [String] {
+            for urlString in photos {
+                try? await deletePhotoByURL(urlString)
+            }
+        }
+
+        try await recordRef.delete()
+    }
+
+    /// Firebase Storage 다운로드 URL로부터 참조를 구성해 삭제.
+    private func deletePhotoByURL(_ urlString: String) async throws {
+        guard urlString.contains("firebasestorage") else { return }
+        let ref = storage.reference(forURL: urlString)
+        try await ref.delete()
     }
 
     // MARK: - Helpers

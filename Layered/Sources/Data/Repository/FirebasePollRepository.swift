@@ -122,10 +122,12 @@ final class FirebasePollRepository: PollRepositoryProtocol {
     }
 
     func deletePoll(familyId: String, meetingId: String, pollId: String) async throws {
-        try await pollsRef(familyId: familyId, meetingId: meetingId).document(pollId).delete()
+        // hasPoll 업데이트를 먼저 수행해 UI(투표 뱃지)가 곧바로 옳게 반영되게 함.
+        // 투표 문서는 그 다음 삭제. 두 단계 중 한 쪽만 실패해도 UI는 정합성 유지.
         try await db.collection("families").document(familyId)
             .collection("meetings").document(meetingId)
             .updateData(["hasPoll": false])
+        try await pollsRef(familyId: familyId, meetingId: meetingId).document(pollId).delete()
     }
 
     // MARK: - Helpers
