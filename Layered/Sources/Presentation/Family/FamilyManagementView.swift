@@ -112,7 +112,7 @@ struct FamilyManagementView: View {
                     .font(.body)
                     .foregroundStyle(iconColor)
                     .frame(width: 36, height: 36)
-                    .background(.white)
+                    .background(Color(.systemBackground))
                     .clipShape(Circle())
 
                 Text(title)

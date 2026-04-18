@@ -71,7 +71,7 @@ struct MeetingDetailView: View {
                             .font(.title3)
                             .foregroundStyle(AppColors.primary)
                             .frame(width: 44, height: 44)
-                            .background(.white)
+                            .background(Color(.systemBackground))
                             .clipShape(Circle())
 
                         VStack(alignment: .leading, spacing: 2) {
@@ -104,7 +104,7 @@ struct MeetingDetailView: View {
                             .font(.title3)
                             .foregroundStyle(AppColors.primary)
                             .frame(width: 44, height: 44)
-                            .background(.white)
+                            .background(Color(.systemBackground))
                             .clipShape(Circle())
 
                         VStack(alignment: .leading, spacing: 2) {
@@ -129,7 +129,7 @@ struct MeetingDetailView: View {
                                 .font(.title3)
                                 .foregroundStyle(AppColors.primary)
                                 .frame(width: 40, height: 40)
-                                .background(.white)
+                                .background(Color(.systemBackground))
                                 .clipShape(Circle())
 
                             Text("활동")
@@ -150,7 +150,7 @@ struct MeetingDetailView: View {
                                 .font(.title3)
                                 .foregroundStyle(AppColors.primary)
                                 .frame(width: 40, height: 40)
-                                .background(.white)
+                                .background(Color(.systemBackground))
                                 .clipShape(Circle())
 
                             Text("작성자")

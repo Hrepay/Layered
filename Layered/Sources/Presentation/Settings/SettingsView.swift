@@ -217,7 +217,7 @@ struct SettingsView: View {
                     .font(.body)
                     .foregroundStyle(AppColors.primary)
                     .frame(width: 36, height: 36)
-                    .background(.white)
+                    .background(Color(.systemBackground))
                     .clipShape(Circle())
 
                 Text(title)
