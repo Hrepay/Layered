@@ -83,7 +83,9 @@ struct HomeView: View {
                         // 모임 추가하기 카드
                         if isPlanner {
                             addMeetingCard
-                        } else if upcomingMeeting == nil && pastMeeting == nil {
+                        } else {
+                            // 비-플래너는 다가오는 모임이 없으면 지난 모임 유무와 무관하게
+                            // "다음 플래너를 기다려주세요" 카드를 노출한다.
                             emptyMeetingView
                         }
                     }
