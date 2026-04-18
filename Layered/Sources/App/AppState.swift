@@ -389,6 +389,8 @@ final class AppState {
 
     func deleteMeeting(_ meetingId: String) async throws {
         guard let familyId = currentFamily?.id else { throw AppStateError.noFamily }
+        isLoading = true
+        defer { isLoading = false }
         try await meetingRepository.deleteMeeting(familyId: familyId, meetingId: meetingId)
         await refreshMeetings()
     }
@@ -425,6 +427,8 @@ final class AppState {
 
     func deletePoll(meetingId: String, pollId: String) async throws {
         guard let familyId = currentFamily?.id else { throw AppStateError.noFamily }
+        isLoading = true
+        defer { isLoading = false }
         try await pollRepository.deletePoll(familyId: familyId, meetingId: meetingId, pollId: pollId)
         await refreshMeetings()
     }
@@ -450,12 +454,16 @@ final class AppState {
 
     func deleteRecord(meetingId: String, recordId: String) async throws {
         guard let familyId = currentFamily?.id else { throw AppStateError.noFamily }
+        isLoading = true
+        defer { isLoading = false }
         try await recordRepository.deleteRecord(familyId: familyId, meetingId: meetingId, recordId: recordId)
     }
 
     // MARK: - 구성원 관리
     func removeMember(_ memberId: String) async throws {
         guard let familyId = currentFamily?.id else { throw AppStateError.noFamily }
+        isLoading = true
+        defer { isLoading = false }
         try await memberRepository.removeMember(familyId: familyId, memberId: memberId)
         await refreshMembers()
     }
@@ -475,6 +483,8 @@ final class AppState {
     func leaveFamily() async throws {
         guard let family = currentFamily,
               let userId = currentUser?.id else { throw AppStateError.noFamily }
+        isLoading = true
+        defer { isLoading = false }
         let familyId = family.id
 
         if members.count <= 1 {
@@ -542,6 +552,8 @@ final class AppState {
               let userId = currentUser?.id else { throw AppStateError.noFamily }
         guard family.adminId == userId else { throw AppStateError.notAdmin }
         guard members.count <= 1 else { throw AppStateError.familyHasOtherMembers }
+        isLoading = true
+        defer { isLoading = false }
         try await familyRepository.deleteFamily(id: family.id)
         if var updatedUser = currentUser {
             updatedUser.familyId = nil
