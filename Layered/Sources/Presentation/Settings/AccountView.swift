@@ -6,7 +6,6 @@ struct AccountView: View {
 
     @State private var showLogoutAlert = false
     @State private var showDeleteAlert = false
-    @State private var showReauthAlert = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -57,34 +56,17 @@ struct AccountView: View {
         }
         .alert("계정 삭제", isPresented: $showDeleteAlert) {
             Button("취소", role: .cancel) {}
-            Button("삭제", role: .destructive) {
+            Button("계속", role: .destructive) {
                 Task {
                     do {
-                        let result = try await appState.deleteAccount()
-                        if result == .needsReauth {
-                            showReauthAlert = true
-                        }
+                        try await appState.deleteAccount()
                     } catch {
                         appState.error = AppError.from(error)
                     }
                 }
             }
         } message: {
-            Text("모든 데이터가 영구 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.")
-        }
-        .alert("본인 확인이 필요해요", isPresented: $showReauthAlert) {
-            Button("취소", role: .cancel) {}
-            Button("Apple 재인증") {
-                Task {
-                    do {
-                        try await appState.deleteAccountWithReauth()
-                    } catch {
-                        appState.error = AppError.from(error)
-                    }
-                }
-            }
-        } message: {
-            Text("계정 삭제 전에 보안을 위해 Apple 로그인으로 본인 확인이 필요합니다.\n계속하시겠습니까?")
+            Text("모든 데이터가 영구 삭제됩니다.\n본인 확인을 위해 이어서 Apple 로그인이 한 번 표시됩니다.")
         }
         .swipeBack(onBack: onBack)
     }
