@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SplashView: View {
+    @Environment(\.colorScheme) private var colorScheme
     @State private var circleScale: CGFloat = 0       // 0 = 숨김, 1 = 정상
     @State private var rotationAngle: Double = 0      // 회전
     @State private var mergeProgress: CGFloat = 1     // 1 = 각자 위치, 0 = 중앙 합체
@@ -63,7 +64,7 @@ struct SplashView: View {
             .scaleEffect(circleScale)
             .offset(x: offset.x * mergeProgress, y: offset.y * mergeProgress)
             .opacity(isPrimary ? 1 : nonPrimaryOpacity)
-            .blendMode(.multiply)
+            .blendMode(colorScheme == .dark ? .screen : .multiply)
     }
 
     private func startAnimation() {
