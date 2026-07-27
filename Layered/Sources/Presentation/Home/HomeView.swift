@@ -35,13 +35,14 @@ struct HomeView: View {
     private var upcomingMeeting: Meeting? {
         meetings.first {
             ($0.status == .confirmed || $0.status == .planning)
-            && $0.meetingDate > Date()
+            // 여행은 종료일 자정까지 "진행 중"으로 홈에 유지
+            && $0.effectiveEndDate > Date()
         }
     }
 
     private var pastMeeting: Meeting? {
         meetings.first {
-            $0.meetingDate <= Date()
+            $0.effectiveEndDate <= Date()
             && $0.status != .cancelled
         }
     }
@@ -302,7 +303,7 @@ struct HomeView: View {
             VStack {
                 // 상단: D-day 글래스 pill + 상태 뱃지
                 HStack(spacing: 8) {
-                    Text(dDayText(for: meeting.meetingDate))
+                    Text(dDayText(for: meeting))
                         .font(.headline)
                         .fontWeight(.bold)
                         .foregroundStyle(.white)
@@ -310,6 +311,9 @@ struct HomeView: View {
                         .padding(.vertical, 7)
                         .background(.ultraThinMaterial, in: Capsule())
 
+                    if meeting.isTrip {
+                        BadgeView(text: "여행", color: AppColors.info)
+                    }
                     BadgeView(
                         text: meeting.status == .confirmed ? "확정" : "예정됨",
                         color: meeting.status == .confirmed ? AppColors.secondary : AppColors.warning
@@ -330,7 +334,7 @@ struct HomeView: View {
                         .lineLimit(2)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
-                    Text(formatDate(meeting.meetingDate))
+                    Text(meetingDateText(meeting))
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundStyle(.white.opacity(0.92))
@@ -500,7 +504,7 @@ struct HomeView: View {
                 }
 
                 // 날짜
-                Text(formatDate(meeting.meetingDate))
+                Text(meetingDateText(meeting))
                     .font(.subheadline)
                     .fontWeight(.bold)
                     .foregroundStyle(.secondary)
@@ -884,11 +888,25 @@ struct HomeView: View {
         return "D+\(abs(days))"
     }
 
+    /// 여행이 진행 중이면 D-day 대신 "여행 중" 표시.
+    private func dDayText(for meeting: Meeting) -> String {
+        meeting.isTripInProgress ? "여행 중" : dDayText(for: meeting.meetingDate)
+    }
+
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ko_KR")
         formatter.dateFormat = "M월 d일 (E) a h:mm"
         return formatter.string(from: date)
+    }
+
+    /// 카드 날짜 줄 — 당일 모임은 일시, 여행은 기간 + 박수.
+    private func meetingDateText(_ meeting: Meeting) -> String {
+        if let period = MeetingTimeFormat.tripPeriod(meeting) {
+            let nights = MeetingTimeFormat.tripNights(meeting).map { " · \($0)" } ?? ""
+            return period + nights
+        }
+        return formatDate(meeting.meetingDate)
     }
 }
 

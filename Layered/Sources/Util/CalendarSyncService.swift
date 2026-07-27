@@ -75,9 +75,17 @@ final class CalendarSyncService {
 
         // 2) 필드 갱신
         event.title = "겹겹 · \(meeting.displayPlace)"
-        event.startDate = meeting.meetingDate
-        // 우리 모델에 endDate 없으니 기본 2시간으로 고정. 추후 모델 확장 시 교체.
-        event.endDate = meeting.meetingDate.addingTimeInterval(2 * 3600)
+        if let tripEnd = meeting.endDate {
+            // 여행: 시작일~종료일 종일 이벤트
+            event.isAllDay = true
+            event.startDate = meeting.meetingDate
+            event.endDate = tripEnd
+        } else {
+            event.isAllDay = false
+            event.startDate = meeting.meetingDate
+            // 당일 모임은 종료 시각 개념이 없어 기본 2시간으로 고정.
+            event.endDate = meeting.meetingDate.addingTimeInterval(2 * 3600)
+        }
         event.location = meeting.place.isEmpty ? nil : meeting.place
         event.notes = buildNotes(meeting: meeting)
 

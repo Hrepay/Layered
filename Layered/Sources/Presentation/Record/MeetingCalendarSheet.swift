@@ -209,8 +209,14 @@ struct MeetingCalendarSheet: View {
 
     private func hasMeeting(on date: Date) -> Bool {
         meetings.contains { meeting in
-            meeting.status != .cancelled
-                && calendar.isDate(meeting.meetingDate, inSameDayAs: date)
+            guard meeting.status != .cancelled else { return false }
+            // 여행이면 시작일~종료일 전체를 모임 있는 날로 표시
+            if let endDate = meeting.endDate {
+                let day = calendar.startOfDay(for: date)
+                return day >= calendar.startOfDay(for: meeting.meetingDate)
+                    && day <= calendar.startOfDay(for: endDate)
+            }
+            return calendar.isDate(meeting.meetingDate, inSameDayAs: date)
         }
     }
 

@@ -9,6 +9,9 @@ struct EditMeetingView: View {
     @Environment(AppState.self) private var appState: AppState
 
     @State private var date: Date
+    // 여행 모드 — 1박 이상이면 종료일까지 기간으로 저장
+    @State private var isTrip: Bool
+    @State private var endDate: Date
     // 단일 장소 모드
     @State private var place: String
     @State private var placeURL: String
@@ -41,10 +44,17 @@ struct EditMeetingView: View {
         PlaceCandidateDraft.toPollOptions(candidates)
     }
 
+    /// 지난/미래 판정용 종료 시점 — 당일 모임은 시작 시각, 여행은 종료일이 지나는 자정.
+    private var endMoment: Date {
+        guard isTrip else { return date }
+        let calendar = Calendar.current
+        return calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: endDate)) ?? endDate
+    }
+
     /// 저장 시 cancelled/completed 모임이 미래 시점으로 옮겨져 자동으로 다시 활성화되는지.
     /// EditMeetingView가 trailing 액션 분기와 alert 메시지에서 모두 참조.
     private var willReactivate: Bool {
-        date > Date()
+        endMoment > Date()
             && (meeting.status == .completed || meeting.status == .cancelled)
     }
 
@@ -67,6 +77,10 @@ struct EditMeetingView: View {
         self.onBack = onBack
         self.onSaved = onSaved
         _date = State(initialValue: meeting.meetingDate)
+        _isTrip = State(initialValue: meeting.isTrip)
+        _endDate = State(initialValue: meeting.endDate
+            ?? Calendar.current.date(byAdding: .day, value: 1, to: meeting.meetingDate)
+            ?? meeting.meetingDate)
         _place = State(initialValue: meeting.place)
         _placeURL = State(initialValue: meeting.placeURL ?? "")
         if let lat = meeting.placeLatitude, let lng = meeting.placeLongitude {
@@ -101,7 +115,7 @@ struct EditMeetingView: View {
                 trailingText: "완료",
                 trailingAction: {
                     Haptic.medium()
-                    if date < Date() {
+                    if endMoment < Date() {
                         showPastDateAlert = true
                     } else if willReactivate {
                         // cancelled/completed 모임을 미래로 옮기는 경우 한 번 더 확인.
@@ -117,16 +131,18 @@ struct EditMeetingView: View {
             ScrollView {
                 VStack(spacing: 24) {
                     // 날짜 & 시간
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("날짜 & 시간")
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(isTrip ? "여행 기간" : "날짜 & 시간")
                             .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundStyle(.secondary)
 
-                        DatePicker("", selection: $date, displayedComponents: [.date, .hourAndMinute])
-                            .datePickerStyle(.graphical)
-                            .tint(AppColors.primary)
-                            .labelsHidden()
+                        MeetingDateSection(
+                            isTrip: $isTrip.animation(.easeInOut(duration: 0.2)),
+                            date: $date,
+                            endDate: $endDate,
+                            allowsPastDates: true
+                        )
                     }
 
                     // 장소 (단일 ↔ 후보 모드)
@@ -360,6 +376,7 @@ struct EditMeetingView: View {
 
         var updated = meeting
         updated.meetingDate = date
+        updated.endDate = isTrip ? endDate : nil
         updated.activity = finalActivity
         updated.updatedAt = Date()
 
@@ -380,8 +397,8 @@ struct EditMeetingView: View {
         }
 
         // 일시가 미래로 옮겨졌으면 홈의 upcomingMeeting 필터에 다시 잡히게 status를 살린다.
-        // (HomeView는 status==.planning|.confirmed 이고 meetingDate>now 인 모임만 다음 모임으로 뽑음)
-        if date > Date() && (updated.status == .completed || updated.status == .cancelled) {
+        // (HomeView는 status==.planning|.confirmed 이고 아직 안 끝난 모임만 다음 모임으로 뽑음)
+        if endMoment > Date() && (updated.status == .completed || updated.status == .cancelled) {
             updated.status = .planning
         }
 

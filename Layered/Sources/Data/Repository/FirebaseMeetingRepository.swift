@@ -15,6 +15,7 @@ final class FirebaseMeetingRepository: MeetingRepositoryProtocol {
             "plannerId": meeting.plannerId,
             "plannerName": meeting.plannerName,
             "meetingDate": Timestamp(date: meeting.meetingDate),
+            "endDate": meeting.endDate.map { Timestamp(date: $0) } as Any,
             "place": meeting.place,
             "placeId": meeting.placeId as Any,
             "placeLatitude": meeting.placeLatitude as Any,
@@ -37,6 +38,7 @@ final class FirebaseMeetingRepository: MeetingRepositoryProtocol {
             plannerId: meeting.plannerId,
             plannerName: meeting.plannerName,
             meetingDate: meeting.meetingDate,
+            endDate: meeting.endDate,
             place: meeting.place,
             placeId: meeting.placeId,
             placeLatitude: meeting.placeLatitude,
@@ -71,6 +73,7 @@ final class FirebaseMeetingRepository: MeetingRepositoryProtocol {
     func updateMeeting(familyId: String, meeting: Meeting) async throws {
         var update: [String: Any] = [
             "meetingDate": Timestamp(date: meeting.meetingDate),
+            "endDate": meeting.endDate.map { Timestamp(date: $0) } as Any,
             "place": meeting.place,
             "placeId": meeting.placeId as Any,
             "placeLatitude": meeting.placeLatitude as Any,
@@ -281,6 +284,7 @@ final class FirebaseMeetingRepository: MeetingRepositoryProtocol {
             plannerId: data["plannerId"] as? String ?? "",
             plannerName: data["plannerName"] as? String ?? "",
             meetingDate: (data["meetingDate"] as? Timestamp)?.dateValue() ?? Date(),
+            endDate: (data["endDate"] as? Timestamp)?.dateValue(),
             place: data["place"] as? String ?? "",
             placeId: data["placeId"] as? String,
             placeLatitude: data["placeLatitude"] as? Double,

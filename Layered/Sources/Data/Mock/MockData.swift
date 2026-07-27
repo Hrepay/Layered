@@ -122,6 +122,24 @@ enum MockData {
             createdAt: daysFromNow(-20),
             updatedAt: daysFromNow(-12)
         ),
+        // 다가오는 가족 여행 (여행 모드 프리뷰용)
+        Meeting(
+            id: "meeting-trip",
+            plannerId: "user-002",
+            plannerName: "엄마",
+            meetingDate: daysFromNow(14, hour: 9, minute: 0),
+            endDate: daysFromNow(16, hour: 18, minute: 0),
+            place: "제주도",
+            placeId: nil,
+            placeLatitude: 33.4996,
+            placeLongitude: 126.5312,
+            placeURL: nil,
+            activity: "여행, 산책",
+            status: .confirmed,
+            hasPoll: false,
+            createdAt: daysFromNow(-3),
+            updatedAt: daysFromNow(-3)
+        ),
         // 지난 모임 3
         Meeting(
             id: "meeting-past-3",

@@ -244,6 +244,22 @@ enum MeetingTimeFormat {
         if interval < 60 { return "방금 전" }
         return relativeFormatter.localizedString(for: date, relativeTo: now)
     }
+
+    /// 여행 기간 한 줄 표기: "7월 30일 (수) ~ 8월 1일 (금)". 당일 모임이면 nil.
+    static func tripPeriod(_ meeting: Meeting) -> String? {
+        guard let endDate = meeting.endDate else { return nil }
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "ko_KR")
+        f.dateFormat = "M월 d일 (E)"
+        return "\(f.string(from: meeting.meetingDate)) ~ \(f.string(from: endDate))"
+    }
+
+    /// "2박 3일" 표기. 당일 모임이면 nil.
+    static func tripNights(_ meeting: Meeting) -> String? {
+        guard meeting.isTrip else { return nil }
+        let days = meeting.durationDays
+        return "\(days - 1)박 \(days)일"
+    }
 }
 
 // MARK: - 햅틱

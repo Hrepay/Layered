@@ -27,6 +27,9 @@ struct CreateMeetingView: View {
     @Environment(AppState.self) private var appState: AppState
 
     @State private var date = Date()
+    // 여행 모드 — 1박 이상이면 종료일까지 기간으로 저장
+    @State private var isTrip = false
+    @State private var endDate = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
     // 단일 장소 모드
     @State private var place = ""
     @State private var placeURL = ""
@@ -88,6 +91,7 @@ struct CreateMeetingView: View {
                         plannerId: appState.currentUser?.id ?? "",
                         plannerName: appState.currentUser?.name ?? "",
                         meetingDate: date,
+                        endDate: isTrip ? endDate : nil,
                         place: savedPlace,
                         placeId: useCandidates ? nil : placeId,
                         placeLatitude: useCandidates ? nil : placeCoordinate?.latitude,
@@ -108,16 +112,18 @@ struct CreateMeetingView: View {
             ScrollView {
                 VStack(spacing: 24) {
                     // 날짜 & 시간
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("날짜 & 시간")
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(isTrip ? "여행 기간" : "날짜 & 시간")
                             .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundStyle(.secondary)
 
-                        DatePicker("", selection: $date, in: Date()..., displayedComponents: [.date, .hourAndMinute])
-                            .datePickerStyle(.graphical)
-                            .tint(AppColors.primary)
-                            .labelsHidden()
+                        MeetingDateSection(
+                            isTrip: $isTrip.animation(.easeInOut(duration: 0.2)),
+                            date: $date,
+                            endDate: $endDate,
+                            allowsPastDates: false
+                        )
                     }
 
                     // 장소 (단일 ↔ 후보 모드)

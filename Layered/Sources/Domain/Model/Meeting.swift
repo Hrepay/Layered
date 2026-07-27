@@ -5,6 +5,8 @@ struct Meeting: Identifiable, Codable, Hashable {
     var plannerId: String
     var plannerName: String
     var meetingDate: Date
+    /// 여행(1박 이상) 종료일. nil이면 기존과 같은 당일 모임 — 과거 데이터와 자연 호환.
+    var endDate: Date? = nil
     var place: String
     /// 카카오 장소 ID — 검색으로 고른 경우에만. 위시리스트 매칭·일정표 재사용 키.
     var placeId: String? = nil
@@ -46,6 +48,36 @@ extension Meeting {
     var displayPlace: String {
         if hasPoll && place.isEmpty { return "장소 투표 중" }
         return place
+    }
+
+    /// 1박 이상 여행인지.
+    var isTrip: Bool { endDate != nil }
+
+    /// 여행 일수 (2박 3일이면 3). 당일 모임은 1.
+    var durationDays: Int {
+        guard let endDate else { return 1 }
+        let calendar = Calendar.current
+        let days = calendar.dateComponents(
+            [.day],
+            from: calendar.startOfDay(for: meetingDate),
+            to: calendar.startOfDay(for: endDate)
+        ).day ?? 0
+        return max(1, days + 1)
+    }
+
+    /// 모임이 "끝나는" 시점 — 다가오는/지난 판정용.
+    /// 당일 모임은 시작 시각, 여행은 종료일이 지나는 자정.
+    var effectiveEndDate: Date {
+        guard let endDate else { return meetingDate }
+        let calendar = Calendar.current
+        return calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: endDate)) ?? endDate
+    }
+
+    /// 여행 진행 중인지 (시작일 0시 ~ 종료일 자정).
+    var isTripInProgress: Bool {
+        guard isTrip else { return false }
+        let now = Date()
+        return Calendar.current.startOfDay(for: meetingDate) <= now && now < effectiveEndDate
     }
 
     /// 실제 참여자 id. 명단이 비어 있으면(레거시 모임) 가족 전원으로 폴백.

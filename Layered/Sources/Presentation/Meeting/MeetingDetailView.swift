@@ -111,9 +111,9 @@ struct MeetingDetailView: View {
                             .foregroundStyle(.secondary)
                     }
 
-                    // MARK: - 일시 카드
+                    // MARK: - 일시 카드 (여행이면 기간 + 박수)
                     HStack(spacing: 14) {
-                        Image(systemName: "calendar")
+                        Image(systemName: meeting.isTrip ? "airplane" : "calendar")
                             .font(.title3)
                             .foregroundStyle(AppColors.primary)
                             .frame(width: 44, height: 44)
@@ -121,10 +121,10 @@ struct MeetingDetailView: View {
                             .clipShape(Circle())
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("일시")
+                            Text(meeting.isTrip ? "여행 기간" : "일시")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                            Text(formatDateFull(meeting.meetingDate))
+                            Text(MeetingTimeFormat.tripPeriod(meeting) ?? formatDateFull(meeting.meetingDate))
                                 .font(.subheadline)
                                 .fontWeight(.semibold)
                                 .foregroundStyle(.primary)
@@ -132,14 +132,21 @@ struct MeetingDetailView: View {
 
                         Spacer()
 
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text(formatTimePeriod(meeting.meetingDate))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Text(formatTime(meeting.meetingDate))
+                        if let nights = MeetingTimeFormat.tripNights(meeting) {
+                            Text(nights)
                                 .font(.headline)
                                 .fontWeight(.bold)
                                 .foregroundStyle(.primary)
+                        } else {
+                            VStack(alignment: .trailing, spacing: 2) {
+                                Text(formatTimePeriod(meeting.meetingDate))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Text(formatTime(meeting.meetingDate))
+                                    .font(.headline)
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(.primary)
+                            }
                         }
                     }
                     .card()
