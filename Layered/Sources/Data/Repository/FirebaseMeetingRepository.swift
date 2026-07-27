@@ -119,6 +119,12 @@ final class FirebaseMeetingRepository: MeetingRepositoryProtocol {
             try? await nudgeDoc.reference.delete()
         }
 
+        // 2-2. itinerary 서브컬렉션 (여행 일정표)
+        let itinerarySnapshot = try await meetingRef.collection("itinerary").getDocuments()
+        for itineraryDoc in itinerarySnapshot.documents {
+            try? await itineraryDoc.reference.delete()
+        }
+
         // 3. records 서브컬렉션 — 사진 URL까지 전부 Storage에서 삭제 후 문서 삭제
         let recordsSnapshot = try await meetingRef.collection("records").getDocuments()
         for recordDoc in recordsSnapshot.documents {

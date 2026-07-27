@@ -24,6 +24,8 @@ struct MeetingDetailView: View {
     @State private var showDiscussion = false
     @State private var showParticipants = false
     @State private var toast: ToastData?
+    // 여행 일정표 — 섹션이 로드·편집하고, 지도가 같은 배열을 재사용
+    @State private var itineraryItems: [ItineraryItem] = []
 
     init(meeting: Meeting, onBack: @escaping () -> Void, onDeleted: (() -> Void)? = nil, onUpdated: (() -> Void)? = nil, showsActionMenu: Bool = true) {
         _meeting = State(initialValue: meeting)
@@ -156,6 +158,11 @@ struct MeetingDetailView: View {
                         candidatesCard
                     } else {
                         singlePlaceCard
+                    }
+
+                    // MARK: - 여행 일정표
+                    if meeting.isTrip {
+                        TripItinerarySection(meeting: meeting, items: $itineraryItems)
                     }
 
                     // MARK: - 활동 & 플래너 (2열 그리드)

@@ -127,6 +127,11 @@ service cloud.firestore {
           allow read, write: if isMemberOf(familyId);
         }
 
+        // 여행 일정표: 모임 수정과 같은 정책 — 가족 멤버 누구나 편집 가능
+        match /itinerary/{itemId} {
+          allow read, write: if isMemberOf(familyId);
+        }
+
         // 모임 의견: 멤버 누구나 읽기/작성, 수정·삭제는 본인만
         match /comments/{commentId} {
           allow read: if isMemberOf(familyId);

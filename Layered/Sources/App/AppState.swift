@@ -59,6 +59,7 @@ final class AppState {
     @ObservationIgnored private var _storageRepository: StorageRepositoryProtocol?
     @ObservationIgnored private var _placeSearchRepository: PlaceSearchRepositoryProtocol?
     @ObservationIgnored private var _placeWishRepository: PlaceWishRepositoryProtocol?
+    @ObservationIgnored private var _itineraryRepository: ItineraryRepositoryProtocol?
 
     private var authRepository: AuthRepositoryProtocol {
         if _authRepository == nil {
@@ -125,6 +126,12 @@ final class AppState {
             _placeWishRepository = shouldUseMock ? MockPlaceWishRepository() : FirebasePlaceWishRepository()
         }
         return _placeWishRepository!
+    }
+    var itineraryRepository: ItineraryRepositoryProtocol {
+        if _itineraryRepository == nil {
+            _itineraryRepository = shouldUseMock ? MockItineraryRepository() : FirebaseItineraryRepository()
+        }
+        return _itineraryRepository!
     }
 
     private var hasSeenOnboarding: Bool {
@@ -582,6 +589,32 @@ final class AppState {
     func updatePollOptions(meetingId: String, pollId: String, options: [PollOption]) async throws {
         guard let familyId = currentFamily?.id else { throw AppStateError.noFamily }
         try await pollRepository.updatePollOptions(familyId: familyId, meetingId: meetingId, pollId: pollId, options: options)
+    }
+
+    // MARK: - 여행 일정표 CRUD
+    func getItineraryItems(meetingId: String) async throws -> [ItineraryItem] {
+        guard let familyId = currentFamily?.id else { throw AppStateError.noFamily }
+        return try await itineraryRepository.getItems(familyId: familyId, meetingId: meetingId)
+    }
+
+    func addItineraryItem(meetingId: String, item: ItineraryItem) async throws -> ItineraryItem {
+        guard let familyId = currentFamily?.id else { throw AppStateError.noFamily }
+        return try await itineraryRepository.addItem(familyId: familyId, meetingId: meetingId, item: item)
+    }
+
+    func updateItineraryItem(meetingId: String, item: ItineraryItem) async throws {
+        guard let familyId = currentFamily?.id else { throw AppStateError.noFamily }
+        try await itineraryRepository.updateItem(familyId: familyId, meetingId: meetingId, item: item)
+    }
+
+    func deleteItineraryItem(meetingId: String, itemId: String) async throws {
+        guard let familyId = currentFamily?.id else { throw AppStateError.noFamily }
+        try await itineraryRepository.deleteItem(familyId: familyId, meetingId: meetingId, itemId: itemId)
+    }
+
+    func reorderItineraryItems(meetingId: String, items: [ItineraryItem]) async throws {
+        guard let familyId = currentFamily?.id else { throw AppStateError.noFamily }
+        try await itineraryRepository.reorderItems(familyId: familyId, meetingId: meetingId, items: items)
     }
 
     // MARK: - 모임 의견 (단일/후보 모드 무관)

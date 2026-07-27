@@ -158,6 +158,34 @@ enum MockData {
         ),
     ]
 
+    // MARK: - Itinerary (가족 여행용)
+    static let itineraryItems: [ItineraryItem] = [
+        ItineraryItem(
+            id: "itin-1", day: 1, order: 0, name: "성산일출봉",
+            placeId: "8149402", latitude: 33.4581, longitude: 126.9425,
+            category: "관광지", detailURL: nil, memo: "오전에 올라가요",
+            createdAt: daysFromNow(-3), updatedAt: daysFromNow(-3)
+        ),
+        ItineraryItem(
+            id: "itin-2", day: 1, order: 1, name: "섭지코지",
+            placeId: "7857537", latitude: 33.4240, longitude: 126.9308,
+            category: "관광지", detailURL: nil, memo: nil,
+            createdAt: daysFromNow(-3), updatedAt: daysFromNow(-3)
+        ),
+        ItineraryItem(
+            id: "itin-3", day: 2, order: 0, name: "우도",
+            placeId: "7857496", latitude: 33.5060, longitude: 126.9530,
+            category: "관광지", detailURL: nil, memo: "배 시간 확인",
+            createdAt: daysFromNow(-3), updatedAt: daysFromNow(-3)
+        ),
+        ItineraryItem(
+            id: "itin-4", day: 3, order: 0, name: "동문시장",
+            placeId: "10913312", latitude: 33.5121, longitude: 126.5279,
+            category: "시장", detailURL: nil, memo: "기념품 사기",
+            createdAt: daysFromNow(-3), updatedAt: daysFromNow(-3)
+        ),
+    ]
+
     // MARK: - Poll (이번 주 예정 모임용)
     static let poll = Poll(
         id: "poll-001",
