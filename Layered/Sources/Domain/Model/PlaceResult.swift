@@ -38,6 +38,18 @@ enum PlaceSearchCategory: String, CaseIterable, Identifiable {
     case snack = "분식"
     case cafe = "카페"
     case pub = "술집"
+    case attraction = "관광지"
+    case lodging = "숙소"
+    case culture = "문화시설"
 
     var id: String { rawValue }
+
+    /// 음식점(FD6)/카페(CE7)가 아닌 자체 카카오 그룹 코드로 검색하는 여행 카테고리.
+    /// '맛집' 키워드 합성·프랜차이즈 필터 같은 음식점 전용 로직을 타지 않는다.
+    var isTravelCategory: Bool {
+        switch self {
+        case .attraction, .lodging, .culture: return true
+        default: return false
+        }
+    }
 }

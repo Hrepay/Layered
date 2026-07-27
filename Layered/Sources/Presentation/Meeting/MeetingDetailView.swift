@@ -652,8 +652,10 @@ struct MeetingDetailView: View {
         var updated = meeting
         updated.place = option.title
         updated.placeURL = option.linkURL
-        updated.placeLatitude = nil
-        updated.placeLongitude = nil
+        // 후보가 검색으로 등록된 곳이면 좌표·ID를 이어받아 상세 지도 핀 유지
+        updated.placeId = option.placeId
+        updated.placeLatitude = option.latitude
+        updated.placeLongitude = option.longitude
         updated.status = .confirmed
         updated.hasPoll = false
         updated.updatedAt = Date()

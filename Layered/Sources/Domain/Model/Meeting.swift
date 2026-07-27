@@ -6,6 +6,8 @@ struct Meeting: Identifiable, Codable, Hashable {
     var plannerName: String
     var meetingDate: Date
     var place: String
+    /// 카카오 장소 ID — 검색으로 고른 경우에만. 위시리스트 매칭·일정표 재사용 키.
+    var placeId: String? = nil
     var placeLatitude: Double?
     var placeLongitude: Double?
     var placeURL: String?

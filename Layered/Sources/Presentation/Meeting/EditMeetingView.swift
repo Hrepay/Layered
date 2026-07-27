@@ -14,6 +14,7 @@ struct EditMeetingView: View {
     @State private var placeURL: String
     // 장소 검색으로 선택/기존 저장된 좌표. 장소명을 수동 수정하면 무효화.
     @State private var placeCoordinate: (latitude: Double, longitude: Double)?
+    @State private var placeId: String?
     @State private var searchSelectedName: String
     @State private var showPlaceSearch = false
     // 후보 모드
@@ -71,6 +72,7 @@ struct EditMeetingView: View {
         if let lat = meeting.placeLatitude, let lng = meeting.placeLongitude {
             _placeCoordinate = State(initialValue: (lat, lng))
         }
+        _placeId = State(initialValue: meeting.placeId)
         _searchSelectedName = State(initialValue: meeting.place)
         _useCandidates = State(initialValue: meeting.hasPoll)
         _isLoadingPoll = State(initialValue: meeting.hasPoll)
@@ -187,6 +189,7 @@ struct EditMeetingView: View {
             PlaceSearchSheet { selected in
                 searchSelectedName = selected.name
                 place = selected.name
+                placeId = selected.id
                 placeCoordinate = (selected.latitude, selected.longitude)
                 if let url = selected.detailURL {
                     placeURL = url
@@ -228,16 +231,29 @@ struct EditMeetingView: View {
                         useCandidates = newValue
                         if newValue && candidates.isEmpty {
                             // 새로 후보 모드 진입: 단일 장소를 첫 후보로 채워주면 부드러움
-                            let seedTitle = place
-                            let seedLink = placeURL
                             candidates = [
-                                PlaceCandidateDraft(title: seedTitle, link: seedLink),
+                                PlaceCandidateDraft(
+                                    title: place,
+                                    link: placeURL,
+                                    placeId: placeId,
+                                    latitude: placeCoordinate?.latitude,
+                                    longitude: placeCoordinate?.longitude,
+                                    searchName: searchSelectedName
+                                ),
                                 PlaceCandidateDraft(),
                             ]
                         } else if !newValue, let firstWithTitle = candidates.first(where: { !$0.title.isEmpty }) {
-                            // 후보 모드 해제: 첫 유효 후보를 단일 장소로 시드
+                            // 후보 모드 해제: 첫 유효 후보를 단일 장소로 시드 (좌표·ID 포함)
                             place = firstWithTitle.title
                             placeURL = firstWithTitle.link
+                            placeId = firstWithTitle.placeId
+                            if let lat = firstWithTitle.latitude, let lng = firstWithTitle.longitude {
+                                placeCoordinate = (lat, lng)
+                            } else {
+                                placeCoordinate = nil
+                            }
+                            // onChange 무효화가 시드된 좌표를 지우지 않도록 기준명 동기화
+                            searchSelectedName = firstWithTitle.title
                         }
                     }
                 }
@@ -276,6 +292,7 @@ struct EditMeetingView: View {
                             // 검색/기존 저장 장소명과 달라지면 좌표가 다른 곳을 가리키므로 무효화
                             if newValue != searchSelectedName {
                                 placeCoordinate = nil
+                                placeId = nil
                             }
                         }
 
@@ -348,12 +365,14 @@ struct EditMeetingView: View {
 
         if useCandidates {
             updated.place = ""
+            updated.placeId = nil
             updated.placeURL = nil
             updated.placeLatitude = nil
             updated.placeLongitude = nil
             updated.hasPoll = true
         } else {
             updated.place = place
+            updated.placeId = placeId
             updated.placeURL = placeURL.isEmpty ? nil : placeURL
             updated.placeLatitude = placeCoordinate?.latitude
             updated.placeLongitude = placeCoordinate?.longitude

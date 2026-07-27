@@ -18,6 +18,9 @@ final class FirebasePollRepository: PollRepositoryProtocol {
                 "description": option.description as Any,
                 "imageURL": option.imageURL as Any,
                 "linkURL": option.linkURL as Any,
+                "placeId": option.placeId as Any,
+                "latitude": option.latitude as Any,
+                "longitude": option.longitude as Any,
                 "voterIds": option.voterIds,
                 "voteCount": option.voteCount,
             ]
@@ -141,6 +144,9 @@ final class FirebasePollRepository: PollRepositoryProtocol {
                 "description": option.description as Any,
                 "imageURL": option.imageURL as Any,
                 "linkURL": option.linkURL as Any,
+                "placeId": option.placeId as Any,
+                "latitude": option.latitude as Any,
+                "longitude": option.longitude as Any,
                 "voterIds": [String](),
                 "voteCount": 0,
             ])
@@ -174,6 +180,9 @@ final class FirebasePollRepository: PollRepositoryProtocol {
                     "description": option.description as Any,
                     "imageURL": option.imageURL as Any,
                     "linkURL": option.linkURL as Any,
+                    "placeId": option.placeId as Any,
+                    "latitude": option.latitude as Any,
+                    "longitude": option.longitude as Any,
                     "voterIds": preserved.0,
                     "voteCount": preserved.1,
                 ]
@@ -202,6 +211,9 @@ final class FirebasePollRepository: PollRepositoryProtocol {
                 description: opt["description"] as? String,
                 imageURL: opt["imageURL"] as? String,
                 linkURL: opt["linkURL"] as? String,
+                placeId: opt["placeId"] as? String,
+                latitude: opt["latitude"] as? Double,
+                longitude: opt["longitude"] as? Double,
                 voterIds: opt["voterIds"] as? [String] ?? [],
                 voteCount: opt["voteCount"] as? Int ?? 0
             )

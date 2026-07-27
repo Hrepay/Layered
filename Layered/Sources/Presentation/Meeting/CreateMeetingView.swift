@@ -32,6 +32,7 @@ struct CreateMeetingView: View {
     @State private var placeURL = ""
     // 장소 검색으로 선택한 좌표 (히스토리 미니맵에 사용). 장소명을 수동 수정하면 무효화.
     @State private var placeCoordinate: (latitude: Double, longitude: Double)?
+    @State private var placeId: String?
     @State private var searchSelectedName = ""
     @State private var showPlaceSearch = false
     // 후보 모드
@@ -88,6 +89,7 @@ struct CreateMeetingView: View {
                         plannerName: appState.currentUser?.name ?? "",
                         meetingDate: date,
                         place: savedPlace,
+                        placeId: useCandidates ? nil : placeId,
                         placeLatitude: useCandidates ? nil : placeCoordinate?.latitude,
                         placeLongitude: useCandidates ? nil : placeCoordinate?.longitude,
                         placeURL: savedPlaceURL,
@@ -175,6 +177,7 @@ struct CreateMeetingView: View {
             PlaceSearchSheet { selected in
                 searchSelectedName = selected.name
                 place = selected.name
+                placeId = selected.id
                 placeCoordinate = (selected.latitude, selected.longitude)
                 if let url = selected.detailURL {
                     placeURL = url
@@ -229,6 +232,7 @@ struct CreateMeetingView: View {
                             // 검색으로 채운 뒤 수동 수정하면 좌표가 다른 곳을 가리키므로 무효화
                             if newValue != searchSelectedName {
                                 placeCoordinate = nil
+                                placeId = nil
                             }
                         }
 

@@ -5,18 +5,41 @@ struct PlaceCandidateDraft: Identifiable, Hashable {
     let id: String
     var title: String
     var link: String
+    /// 장소 검색으로 채운 카카오 장소 ID·좌표. 확정 시 모임 지도 핀으로 이어짐.
+    var placeId: String?
+    var latitude: Double?
+    var longitude: Double?
+    /// 검색으로 채운 시점의 장소명 — 제목 수동 수정 시 좌표 무효화 판단 기준.
+    var searchName: String
 
-    init(id: String = UUID().uuidString, title: String = "", link: String = "") {
+    init(
+        id: String = UUID().uuidString,
+        title: String = "",
+        link: String = "",
+        placeId: String? = nil,
+        latitude: Double? = nil,
+        longitude: Double? = nil,
+        searchName: String = ""
+    ) {
         self.id = id
         self.title = title
         self.link = link
+        self.placeId = placeId
+        self.latitude = latitude
+        self.longitude = longitude
+        self.searchName = searchName
     }
 
     static func from(option: PollOption) -> PlaceCandidateDraft {
         PlaceCandidateDraft(
             id: option.id,
             title: option.title,
-            link: option.linkURL ?? ""
+            link: option.linkURL ?? "",
+            placeId: option.placeId,
+            latitude: option.latitude,
+            longitude: option.longitude,
+            // 저장된 좌표는 현재 제목과 짝이 맞는 상태 — 제목이 바뀔 때만 무효화되도록 기준을 맞춰둠
+            searchName: option.title
         )
     }
 }
@@ -40,6 +63,14 @@ struct PlaceCandidatesEditor: View {
                             placeholder: "후보 \(index + 1) 장소명",
                             text: $candidates[index].title
                         )
+                        .onChange(of: candidates[index].title) { _, newValue in
+                            // 검색으로 채운 뒤 수동 수정하면 좌표가 다른 곳을 가리키므로 무효화
+                            guard candidates.indices.contains(index),
+                                  newValue != candidates[index].searchName else { return }
+                            candidates[index].placeId = nil
+                            candidates[index].latitude = nil
+                            candidates[index].longitude = nil
+                        }
 
                         PlaceSearchIconButton { searchingIndex = index }
 
@@ -112,7 +143,11 @@ struct PlaceCandidatesEditor: View {
             PlaceSearchSheet { selected in
                 guard let index = searchingIndex,
                       candidates.indices.contains(index) else { return }
+                candidates[index].searchName = selected.name
                 candidates[index].title = selected.name
+                candidates[index].placeId = selected.id
+                candidates[index].latitude = selected.latitude
+                candidates[index].longitude = selected.longitude
                 if let url = selected.detailURL {
                     candidates[index].link = url
                 }
@@ -143,6 +178,9 @@ extension PlaceCandidateDraft {
                 description: nil,
                 imageURL: nil,
                 linkURL: linkURL,
+                placeId: draft.placeId,
+                latitude: draft.latitude,
+                longitude: draft.longitude,
                 voterIds: [],
                 voteCount: 0
             )

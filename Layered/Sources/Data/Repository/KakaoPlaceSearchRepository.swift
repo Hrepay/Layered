@@ -19,6 +19,8 @@ final class KakaoPlaceSearchRepository: PlaceSearchRepositoryProtocol {
     ) async throws -> [PlaceResult] {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         let radius = Self.maxRadiusMeters
+        // 관광지·숙소·문화시설 칩엔 '맛집만' 개념이 없음 — 일반 검색으로 처리
+        let restaurantsOnly = restaurantsOnly && !category.isTravelCategory
 
         // "맛집만" + 좌표: 동네명 기반 인기 검색 (아래 popularSearch 주석 참고)
         if restaurantsOnly, let latitude, let longitude {
@@ -149,6 +151,9 @@ final class KakaoPlaceSearchRepository: PlaceSearchRepositoryProtocol {
         switch category {
         case .cafe: return ["CE7"]
         case .all: return ["FD6", "CE7"]
+        case .attraction: return ["AT4"]
+        case .lodging: return ["AD5"]
+        case .culture: return ["CT1"]
         default: return ["FD6"]
         }
     }
@@ -217,12 +222,15 @@ final class KakaoPlaceSearchRepository: PlaceSearchRepositoryProtocol {
         longitude: Double?
     ) async throws -> [PlaceResult] {
         // 세부 업종 칩은 검색어에 접두어로 합성 (카카오는 업종 키워드 검색 품질이 좋음)
+        // 여행 카테고리는 그룹 코드가 업종을 완전히 커버하므로 접두어 없이 검색.
         var parts: [String] = []
         switch category {
         case .all, .cafe:
             break
         default:
-            parts.append(category.rawValue)
+            if !category.isTravelCategory {
+                parts.append(category.rawValue)
+            }
         }
         if !query.isEmpty {
             parts.append(query)
@@ -275,7 +283,8 @@ final class KakaoPlaceSearchRepository: PlaceSearchRepositoryProtocol {
         var results = dedupe(batches.flatMap { $0 })
         results.sort { ($0.distanceMeters ?? .max) < ($1.distanceMeters ?? .max) }
         // 세부 업종 칩이면 카테고리명으로 클라이언트 필터 (카테고리 API는 그룹 단위까지만 지원)
-        guard category != .all, category != .cafe else { return results }
+        // 여행 카테고리는 그룹 코드가 곧 업종이라 추가 필터 불필요.
+        guard category != .all, category != .cafe, !category.isTravelCategory else { return results }
         return results.filter { $0.category.contains(category.rawValue) }
     }
 
