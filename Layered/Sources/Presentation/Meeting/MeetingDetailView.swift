@@ -26,6 +26,7 @@ struct MeetingDetailView: View {
     @State private var toast: ToastData?
     // 여행 일정표 — 섹션이 로드·편집하고, 지도가 같은 배열을 재사용
     @State private var itineraryItems: [ItineraryItem] = []
+    @State private var showTripMap = false
 
     init(meeting: Meeting, onBack: @escaping () -> Void, onDeleted: (() -> Void)? = nil, onUpdated: (() -> Void)? = nil, showsActionMenu: Bool = true) {
         _meeting = State(initialValue: meeting)
@@ -285,8 +286,12 @@ struct MeetingDetailView: View {
                         }
                     }
 
-                    // MARK: - 지도
-                    if let lat = meeting.placeLatitude, let lng = meeting.placeLongitude {
+                    // MARK: - 지도 (여행이면 일정 전체 미리보기, 아니면 단일 핀)
+                    if meeting.isTrip {
+                        if !TripDayGroup.groups(from: itineraryItems).isEmpty {
+                            tripMapPreview
+                        }
+                    } else if let lat = meeting.placeLatitude, let lng = meeting.placeLongitude {
                         Map(initialPosition: .region(MKCoordinateRegion(
                             center: CLLocationCoordinate2D(latitude: lat, longitude: lng),
                             span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
@@ -419,6 +424,41 @@ struct MeetingDetailView: View {
             appState.pendingDeepLink = nil
         default:
             return
+        }
+    }
+
+    // MARK: - 여행 지도 미리보기 (탭 → 전체 화면)
+
+    @ViewBuilder
+    private var tripMapPreview: some View {
+        ZStack(alignment: .bottomTrailing) {
+            Map(initialPosition: .automatic, interactionModes: []) {
+                TripMapLayers(groups: TripDayGroup.groups(from: itineraryItems))
+            }
+            .mapStyle(.standard(pointsOfInterest: .excludingAll))
+
+            HStack(spacing: 4) {
+                Image(systemName: "arrow.up.left.and.arrow.down.right")
+                    .font(.caption2)
+                Text("크게 보기")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+            }
+            .foregroundStyle(.primary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Capsule().fill(.ultraThickMaterial))
+            .padding(10)
+        }
+        .frame(height: 220)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .contentShape(Rectangle())
+        .onTapGesture {
+            Haptic.light()
+            showTripMap = true
+        }
+        .fullScreenCover(isPresented: $showTripMap) {
+            TripMapView(meeting: meeting, items: itineraryItems, onBack: { showTripMap = false })
         }
     }
 
