@@ -33,10 +33,20 @@ final class KakaoPlaceSearchRepository: PlaceSearchRepositoryProtocol {
 
         if trimmed.isEmpty {
             guard let latitude, let longitude else { return [] }
-            // 좌표 기반 카테고리 탐색 (그룹 전체, 거리순)
-            return try await categorySearch(
-                category: category, travelMode: travelMode,
-                radius: radius, latitude: latitude, longitude: longitude
+            // 그룹 코드가 곧 업종인 칩(전체/카페/여행)은 좌표 기반 카테고리 탐색.
+            if category == .all || category == .cafe || category.isTravelCategory {
+                return try await categorySearch(
+                    category: category, travelMode: travelMode,
+                    radius: radius, latitude: latitude, longitude: longitude
+                )
+            }
+            // 한식·중식 같은 세부 업종은 카테고리 API가 지원하지 않아
+            // "가까운 45곳 수집 → 태그 문자열 필터"로는 결과가 거의 안 남는다
+            // (중국집이 '중화요리'로 태그되는 등 표기도 제각각).
+            // 업종명을 키워드로 한 거리순 검색이 정확하고 풍부함.
+            return try await keywordSearch(
+                query: "", category: category, restaurantsOnly: false,
+                travelMode: travelMode, radius: radius, latitude: latitude, longitude: longitude
             )
         }
         return try await keywordSearch(
@@ -288,10 +298,9 @@ final class KakaoPlaceSearchRepository: PlaceSearchRepositoryProtocol {
         let batches = try await fetchGroups(path: "category", baseItems: baseItems, category: category, travelMode: travelMode)
         var results = dedupe(batches.flatMap { $0 })
         results.sort { ($0.distanceMeters ?? .max) < ($1.distanceMeters ?? .max) }
-        // 세부 업종 칩이면 카테고리명으로 클라이언트 필터 (카테고리 API는 그룹 단위까지만 지원)
-        // 여행 카테고리는 그룹 코드가 곧 업종이라 추가 필터 불필요.
-        guard category != .all, category != .cafe, !category.isTravelCategory else { return results }
-        return results.filter { $0.category.contains(category.rawValue) }
+        // 세부 업종 칩은 searchPlaces에서 키워드 검색으로 우회하므로
+        // 여기 오는 칩(전체/카페/여행)은 그룹 코드가 곧 필터의 전부.
+        return results
     }
 
     private func requestPage(path: String, queryItems: [URLQueryItem]) async throws -> KakaoLocalResponse {
