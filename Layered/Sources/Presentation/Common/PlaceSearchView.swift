@@ -232,6 +232,8 @@ struct PlaceSearchView: View {
             .overlay(Capsule().stroke(isOn ? Color.clear : Color(.systemGray4), lineWidth: 1))
             .animation(.easeInOut(duration: 0.15), value: isOn)
         }
+        // 시스템 기본 버튼 스타일이 자체 캡슐 테두리를 입혀 이중 외곽선이 생기는 것 방지
+        .buttonStyle(.plain)
     }
 
     private var nearMeChip: some View {
@@ -273,6 +275,7 @@ struct PlaceSearchView: View {
                 .background(Circle().fill(showMap ? AppColors.primary : Color(.secondarySystemBackground)))
                 .contentTransition(.symbolEffect(.replace))
         }
+        .buttonStyle(.plain)
     }
 
     /// "맛집만 보기": 인기·언급량이 반영되는 '맛집' 키워드 + 정확도 정렬로 전환.
