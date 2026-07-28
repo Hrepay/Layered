@@ -188,7 +188,7 @@ struct CreateMeetingView: View {
                 if let url = selected.detailURL {
                     placeURL = url
                 }
-            }, initialCategory: isTrip ? .lodging : .all)
+            }, initialCategory: isTrip ? .lodging : .all, travelSearch: isTrip)
             .environment(appState)
         }
         .alert("저장되지 않아요", isPresented: $showExitAlert) {

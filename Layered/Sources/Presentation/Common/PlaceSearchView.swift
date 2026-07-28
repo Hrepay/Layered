@@ -16,17 +16,21 @@ struct PlaceSearchView: View {
 
     @Binding var query: String
     @State private var category: PlaceSearchCategory
+    /// 여행 검색 모드 — '전체' 칩이 음식점·카페에 더해 관광지·숙소·문화시설까지 포함.
+    private let travelSearch: Bool
 
     init(
         onSelect: ((PlaceResult) -> Void)? = nil,
         onDismissAfterSelect: (() -> Void)? = nil,
         query: Binding<String>,
-        initialCategory: PlaceSearchCategory = .all
+        initialCategory: PlaceSearchCategory = .all,
+        travelSearch: Bool = false
     ) {
         self.onSelect = onSelect
         self.onDismissAfterSelect = onDismissAfterSelect
         self._query = query
         self._category = State(initialValue: initialCategory)
+        self.travelSearch = travelSearch
     }
     @State private var restaurantsOnly = false
     @State private var nearMe = false
@@ -404,6 +408,7 @@ struct PlaceSearchView: View {
                 query: query,
                 category: category,
                 restaurantsOnly: restaurantsOnly,
+                travelMode: travelSearch,
                 latitude: nearMe ? coordinate?.latitude : nil,
                 longitude: nearMe ? coordinate?.longitude : nil
             )
@@ -421,6 +426,8 @@ struct PlaceSearchSheet: View {
     let onSelect: (PlaceResult) -> Void
     /// 여행 숙소 검색처럼 특정 카테고리로 시작하고 싶을 때 지정.
     var initialCategory: PlaceSearchCategory = .all
+    /// 여행 검색 모드 — '전체' 칩이 관광지·숙소·문화시설까지 포함.
+    var travelSearch: Bool = false
 
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
@@ -432,7 +439,8 @@ struct PlaceSearchSheet: View {
                 onSelect: onSelect,
                 onDismissAfterSelect: { dismiss() },
                 query: $query,
-                initialCategory: initialCategory
+                initialCategory: initialCategory,
+                travelSearch: travelSearch
             )
         }
     }

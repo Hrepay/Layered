@@ -116,9 +116,10 @@ struct TripItinerarySection: View {
             await reload()
         }
         .sheet(isPresented: $showPlaceSearch) {
-            PlaceSearchSheet { selected in
+            // 여행 일정 검색: '전체'가 관광지·숙소·문화시설까지 포함
+            PlaceSearchSheet(onSelect: { selected in
                 Task { await addItem(from: selected) }
-            }
+            }, travelSearch: true)
             .environment(appState)
         }
         .sheet(isPresented: $showManualAdd) {

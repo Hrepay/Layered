@@ -210,7 +210,7 @@ struct EditMeetingView: View {
                 if let url = selected.detailURL {
                     placeURL = url
                 }
-            }, initialCategory: isTrip ? .lodging : .all)
+            }, initialCategory: isTrip ? .lodging : .all, travelSearch: isTrip)
             .environment(appState)
         }
         .alert("이미 지난 시점이에요", isPresented: $showPastDateAlert) {

@@ -14,6 +14,7 @@ final class KakaoPlaceSearchRepository: PlaceSearchRepositoryProtocol {
         query: String,
         category: PlaceSearchCategory,
         restaurantsOnly: Bool,
+        travelMode: Bool,
         latitude: Double?,
         longitude: Double?
     ) async throws -> [PlaceResult] {
@@ -32,14 +33,15 @@ final class KakaoPlaceSearchRepository: PlaceSearchRepositoryProtocol {
 
         if trimmed.isEmpty {
             guard let latitude, let longitude else { return [] }
-            // 좌표 기반 카테고리 탐색 (음식점/카페 그룹 전체, 거리순)
+            // 좌표 기반 카테고리 탐색 (그룹 전체, 거리순)
             return try await categorySearch(
-                category: category, radius: radius, latitude: latitude, longitude: longitude
+                category: category, travelMode: travelMode,
+                radius: radius, latitude: latitude, longitude: longitude
             )
         }
         return try await keywordSearch(
             query: trimmed, category: category, restaurantsOnly: restaurantsOnly,
-            radius: radius, latitude: latitude, longitude: longitude
+            travelMode: travelMode, radius: radius, latitude: latitude, longitude: longitude
         )
     }
 
@@ -146,11 +148,12 @@ final class KakaoPlaceSearchRepository: PlaceSearchRepositoryProtocol {
     // MARK: - 요청 빌드
 
     /// '전체'는 음식점(FD6)+카페(CE7) 두 그룹 병합 — 은행·주차장 등 비음식 업소 제외.
+    /// 여행 모드의 '전체'는 관광지·숙소·문화시설까지 포함.
     /// (API가 category_group_code를 하나만 받으므로 그룹별로 요청 후 합침)
-    private func groupCodes(for category: PlaceSearchCategory) -> [String] {
+    private func groupCodes(for category: PlaceSearchCategory, travelMode: Bool) -> [String] {
         switch category {
         case .cafe: return ["CE7"]
-        case .all: return ["FD6", "CE7"]
+        case .all: return travelMode ? ["FD6", "CE7", "AT4", "AD5", "CT1"] : ["FD6", "CE7"]
         case .attraction: return ["AT4"]
         case .lodging: return ["AD5"]
         case .culture: return ["CT1"]
@@ -182,9 +185,10 @@ final class KakaoPlaceSearchRepository: PlaceSearchRepositoryProtocol {
     private func fetchGroups(
         path: String,
         baseItems: [URLQueryItem],
-        category: PlaceSearchCategory
+        category: PlaceSearchCategory,
+        travelMode: Bool
     ) async throws -> [[PlaceResult]] {
-        let codes = groupCodes(for: category)
+        let codes = groupCodes(for: category, travelMode: travelMode)
         return try await withThrowingTaskGroup(of: (Int, [PlaceResult]).self) { group in
             for (index, code) in codes.enumerated() {
                 let items = baseItems + [URLQueryItem(name: "category_group_code", value: code)]
@@ -217,6 +221,7 @@ final class KakaoPlaceSearchRepository: PlaceSearchRepositoryProtocol {
         query: String,
         category: PlaceSearchCategory,
         restaurantsOnly: Bool,
+        travelMode: Bool,
         radius: Int,
         latitude: Double?,
         longitude: Double?
@@ -258,7 +263,7 @@ final class KakaoPlaceSearchRepository: PlaceSearchRepositoryProtocol {
             sortByDistance = false
         }
 
-        let batches = try await fetchGroups(path: "keyword", baseItems: baseItems, category: category)
+        let batches = try await fetchGroups(path: "keyword", baseItems: baseItems, category: category, travelMode: travelMode)
         var results = dedupe(interleave(batches))
         // 그룹 병합으로 순서가 섞였을 수 있어 거리 모드는 거리순 재정렬
         if sortByDistance {
@@ -269,6 +274,7 @@ final class KakaoPlaceSearchRepository: PlaceSearchRepositoryProtocol {
 
     private func categorySearch(
         category: PlaceSearchCategory,
+        travelMode: Bool,
         radius: Int,
         latitude: Double,
         longitude: Double
@@ -279,7 +285,7 @@ final class KakaoPlaceSearchRepository: PlaceSearchRepositoryProtocol {
             URLQueryItem(name: "radius", value: String(radius)),
             URLQueryItem(name: "sort", value: "distance"),
         ]
-        let batches = try await fetchGroups(path: "category", baseItems: baseItems, category: category)
+        let batches = try await fetchGroups(path: "category", baseItems: baseItems, category: category, travelMode: travelMode)
         var results = dedupe(batches.flatMap { $0 })
         results.sort { ($0.distanceMeters ?? .max) < ($1.distanceMeters ?? .max) }
         // 세부 업종 칩이면 카테고리명으로 클라이언트 필터 (카테고리 API는 그룹 단위까지만 지원)
