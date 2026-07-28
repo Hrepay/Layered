@@ -196,12 +196,16 @@ final class KakaoPlaceSearchRepository: PlaceSearchRepositoryProtocol {
         path: String,
         baseItems: [URLQueryItem],
         category: PlaceSearchCategory,
-        travelMode: Bool
+        travelMode: Bool,
+        includeUngrouped: Bool = false
     ) async throws -> [[PlaceResult]] {
-        let codes = groupCodes(for: category, travelMode: travelMode)
+        var codes: [String?] = groupCodes(for: category, travelMode: travelMode)
+        // 수상레포츠센터·체험시설처럼 카카오 그룹 코드가 빈 장소도 이름 검색에 잡히게
+        // 그룹 제한 없는 요청을 추가 (키워드가 구체적이라 잡음 위험 낮음)
+        if includeUngrouped { codes.append(nil) }
         return try await withThrowingTaskGroup(of: (Int, [PlaceResult]).self) { group in
             for (index, code) in codes.enumerated() {
-                let items = baseItems + [URLQueryItem(name: "category_group_code", value: code)]
+                let items = code.map { baseItems + [URLQueryItem(name: "category_group_code", value: $0)] } ?? baseItems
                 group.addTask {
                     (index, try await self.collectPages(path: path, baseItems: items))
                 }
@@ -273,7 +277,11 @@ final class KakaoPlaceSearchRepository: PlaceSearchRepositoryProtocol {
             sortByDistance = false
         }
 
-        let batches = try await fetchGroups(path: "keyword", baseItems: baseItems, category: category, travelMode: travelMode)
+        let batches = try await fetchGroups(
+            path: "keyword", baseItems: baseItems, category: category, travelMode: travelMode,
+            // 여행 '전체' 칩의 키워드 검색은 그룹 미분류 장소(레저·체험 등)까지 포함
+            includeUngrouped: travelMode && category == .all
+        )
         var results = dedupe(interleave(batches))
         // 그룹 병합으로 순서가 섞였을 수 있어 거리 모드는 거리순 재정렬
         if sortByDistance {
