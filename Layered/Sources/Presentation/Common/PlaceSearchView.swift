@@ -102,6 +102,9 @@ struct PlaceSearchView: View {
                         }
                         .padding(.leading, 20)
                         .padding(.trailing, 8)
+                        // 스크롤뷰가 칩 높이에 딱 맞으면 캡슐 stroke의 바깥 절반이
+                        // 위아래로 클리핑되어 테두리가 눌린 것처럼 보임
+                        .padding(.vertical, 1)
                     }
                     mapToggleButton
                         .padding(.trailing, 20)
@@ -229,7 +232,8 @@ struct PlaceSearchView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(Capsule().fill(isOn ? AppColors.primary : Color.clear))
-            .overlay(Capsule().stroke(isOn ? Color.clear : Color(.systemGray4), lineWidth: 1))
+            // strokeBorder: 선을 도형 안쪽에만 그려 스크롤뷰 클리핑에 잘리지 않음
+            .overlay(Capsule().strokeBorder(isOn ? Color.clear : Color(.systemGray4), lineWidth: 1))
             .animation(.easeInOut(duration: 0.15), value: isOn)
         }
         // 시스템 기본 버튼 스타일이 자체 캡슐 테두리를 입혀 이중 외곽선이 생기는 것 방지
