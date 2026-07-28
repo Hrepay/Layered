@@ -50,6 +50,9 @@ struct PlaceSearchView: View {
     /// 검색 결과 대신 가족 맛집 리스트(가고 싶은 곳)를 표시하는 모드.
     @State private var familyWishMode = false
 
+    /// 업종 선택 캡슐 슬라이드 애니메이션용.
+    @Namespace private var categoryNamespace
+
     var canSearch: Bool {
         !query.trimmingCharacters(in: .whitespaces).isEmpty || (nearMe && coordinate != nil)
     }
@@ -89,19 +92,23 @@ struct PlaceSearchView: View {
                 }
                 .padding(.horizontal, 20)
 
-                // 카테고리 칩 + 내 주변
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        familyWishChip
-                        mapToggleChip
-                        nearMeChip
-                        restaurantsOnlyChip
-                        ForEach(PlaceSearchCategory.allCases) { item in
-                            categoryChip(item)
+                // 1줄: 기능 토글(가족 추천·내 주변·맛집만) + 오른쪽 고정 지도 전환
+                HStack(spacing: 8) {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            familyWishChip
+                            nearMeChip
+                            restaurantsOnlyChip
                         }
+                        .padding(.leading, 20)
+                        .padding(.trailing, 8)
                     }
-                    .padding(.horizontal, 20)
+                    mapToggleButton
+                        .padding(.trailing, 20)
                 }
+
+                // 2줄: 업종 카테고리 — 선택 캡슐이 슬라이드하는 세그먼트 트랙
+                categoryBar
             }
             .padding(.top, 8)
             .padding(.bottom, 12)
@@ -195,7 +202,8 @@ struct PlaceSearchView: View {
 
     // MARK: - 칩
 
-    /// 필터 칩 공통 스타일 — 켜지면 primary 배경 + 흰 콘텐츠.
+    /// 기능 토글 칩 — 꺼진 상태는 외곽선(ghost), 켜지면 primary 채움.
+    /// 업종 세그먼트(채움 트랙)와 시각적으로 구분되는 스타일.
     private func filterChip(
         icon: String? = nil,
         title: String,
@@ -204,7 +212,9 @@ struct PlaceSearchView: View {
     ) -> some View {
         Button {
             Haptic.light()
-            action()
+            withAnimation(.spring(duration: 0.3)) {
+                action()
+            }
         } label: {
             HStack(spacing: 4) {
                 if let icon {
@@ -218,7 +228,9 @@ struct PlaceSearchView: View {
             .foregroundStyle(isOn ? .white : .primary)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(Capsule().fill(isOn ? AppColors.primary : Color(.secondarySystemBackground)))
+            .background(Capsule().fill(isOn ? AppColors.primary : Color.clear))
+            .overlay(Capsule().stroke(isOn ? Color.clear : Color(.systemGray4), lineWidth: 1))
+            .animation(.easeInOut(duration: 0.15), value: isOn)
         }
     }
 
@@ -245,14 +257,21 @@ struct PlaceSearchView: View {
         }
     }
 
-    /// 리스트 ↔ 지도 보기 전환.
-    private var mapToggleChip: some View {
-        filterChip(
-            icon: showMap ? "list.bullet" : "map.fill",
-            title: showMap ? "리스트" : "지도",
-            isOn: showMap
-        ) {
-            showMap.toggle()
+    /// 리스트 ↔ 지도 보기 전환 — 오른쪽에 고정된 원형 버튼.
+    private var mapToggleButton: some View {
+        Button {
+            Haptic.light()
+            withAnimation(.spring(duration: 0.3)) {
+                showMap.toggle()
+            }
+        } label: {
+            Image(systemName: showMap ? "list.bullet" : "map.fill")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(showMap ? .white : .primary)
+                .frame(width: 36, height: 36)
+                .background(Circle().fill(showMap ? AppColors.primary : Color(.secondarySystemBackground)))
+                .contentTransition(.symbolEffect(.replace))
         }
     }
 
@@ -267,13 +286,63 @@ struct PlaceSearchView: View {
         }
     }
 
+    /// 업종 칩 줄 — 트랙 안에서 선택 캡슐이 슬라이드하는 세그먼트.
+    /// 가족 추천 모드에선 업종이 적용되지 않으므로 흐리게 + 비활성.
+    private var categoryBar: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 2) {
+                    ForEach(PlaceSearchCategory.allCases) { item in
+                        categoryChip(item)
+                            .id(item)
+                    }
+                }
+                .padding(4)
+                .background(Capsule().fill(Color(.secondarySystemBackground)))
+                .padding(.horizontal, 20)
+            }
+            .onAppear {
+                // 숙소처럼 뒤쪽 칩으로 시작하는 경우 보이게 스크롤
+                proxy.scrollTo(category, anchor: .center)
+            }
+            .onChange(of: category) { _, newValue in
+                withAnimation(.spring(duration: 0.35)) {
+                    proxy.scrollTo(newValue, anchor: .center)
+                }
+            }
+        }
+        .opacity(familyWishMode ? 0.4 : 1)
+        .disabled(familyWishMode)
+        .animation(.easeInOut(duration: 0.2), value: familyWishMode)
+    }
+
     private func categoryChip(_ item: PlaceSearchCategory) -> some View {
-        filterChip(title: item.rawValue, isOn: category == item) {
-            category = item
+        let isOn = category == item
+        return Button {
+            guard !isOn else { return }
+            Haptic.light()
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                category = item
+            }
             if canSearch {
                 Task { await search() }
             }
+        } label: {
+            Text(item.rawValue)
+                .font(.subheadline)
+                .fontWeight(isOn ? .semibold : .medium)
+                .foregroundStyle(isOn ? .white : .secondary)
+                .padding(.horizontal, 13)
+                .padding(.vertical, 7)
+                .background {
+                    if isOn {
+                        Capsule()
+                            .fill(AppColors.primary)
+                            .matchedGeometryEffect(id: "categoryThumb", in: categoryNamespace)
+                    }
+                }
         }
+        .buttonStyle(.plain)
     }
 
     // MARK: - 결과 행
