@@ -290,7 +290,7 @@ struct MeetingDetailView: View {
 
                     // MARK: - 지도 (여행이면 일정 전체 미리보기, 아니면 단일 핀)
                     if meeting.isTrip {
-                        if !TripDayGroup.groups(from: itineraryItems).isEmpty || tripLodging != nil {
+                        if !TripDayGroup.groups(from: itineraryItems).isEmpty || meeting.tripLodgingPin != nil {
                             tripMapPreview
                         }
                     } else if let lat = meeting.placeLatitude, let lng = meeting.placeLongitude {
@@ -431,18 +431,11 @@ struct MeetingDetailView: View {
 
     // MARK: - 여행 지도 미리보기 (탭 → 전체 화면)
 
-    /// 여행의 대표 장소(숙소) 좌표 — 지도에 침대 핀으로 표시.
-    private var tripLodging: (name: String, coordinate: CLLocationCoordinate2D)? {
-        guard let lat = meeting.placeLatitude, let lng = meeting.placeLongitude,
-              !meeting.place.isEmpty else { return nil }
-        return (meeting.place, CLLocationCoordinate2D(latitude: lat, longitude: lng))
-    }
-
     @ViewBuilder
     private var tripMapPreview: some View {
         ZStack(alignment: .bottomTrailing) {
             Map(initialPosition: .automatic, interactionModes: []) {
-                TripMapLayers(groups: TripDayGroup.groups(from: itineraryItems), lodging: tripLodging)
+                TripMapLayers(groups: TripDayGroup.groups(from: itineraryItems), lodging: meeting.tripLodgingPin)
             }
             .mapStyle(.standard(pointsOfInterest: .excludingAll))
 

@@ -1,6 +1,15 @@
 import SwiftUI
 import MapKit
 
+extension Meeting {
+    /// 여행 지도에 침대 핀으로 표시할 대표 장소(숙소). 검색으로 골라 좌표가 있을 때만.
+    var tripLodgingPin: (name: String, coordinate: CLLocationCoordinate2D)? {
+        guard isTrip, let lat = placeLatitude, let lng = placeLongitude,
+              !place.isEmpty else { return nil }
+        return (place, CLLocationCoordinate2D(latitude: lat, longitude: lng))
+    }
+}
+
 // MARK: - 일차 그룹
 
 /// 지도 표시용 일차 묶음 — 좌표 있는 항목만, 방문 순서 정렬.
@@ -99,11 +108,8 @@ struct TripMapView: View {
         return allGroups.filter { $0.day == selectedDay }
     }
 
-    /// 대표 장소(숙소) 좌표 — 있으면 지도에 침대 핀으로 항상 표시.
     private var lodging: (name: String, coordinate: CLLocationCoordinate2D)? {
-        guard let lat = meeting.placeLatitude, let lng = meeting.placeLongitude,
-              !meeting.place.isEmpty else { return nil }
-        return (meeting.place, CLLocationCoordinate2D(latitude: lat, longitude: lng))
+        meeting.tripLodgingPin
     }
 
     var body: some View {

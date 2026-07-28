@@ -33,7 +33,12 @@ struct TripItinerarySection: View {
     @State private var memoEditingItem: ItineraryItem?
     @State private var memoText = ""
 
-    private var days: [Int] { Array(1...max(1, meeting.durationDays)) }
+    /// 여행 일수만큼의 일차 + 기간 축소로 범위를 벗어난 일정이 남은 일차.
+    /// (3일 여행 → 2일로 줄여도 3일차에 넣어둔 일정을 보고 정리할 수 있게)
+    private var days: [Int] {
+        let maxDay = max(meeting.durationDays, items.map(\.day).max() ?? 1)
+        return Array(1...max(1, maxDay))
+    }
 
     private var selectedDayItems: [ItineraryItem] {
         items.filter { $0.day == selectedDay }.sorted { $0.order < $1.order }

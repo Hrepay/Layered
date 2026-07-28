@@ -33,11 +33,15 @@ struct HomeView: View {
     }
 
     private var upcomingMeeting: Meeting? {
-        meetings.first {
-            ($0.status == .confirmed || $0.status == .planning)
-            // 여행은 종료일 자정까지 "진행 중"으로 홈에 유지
-            && $0.effectiveEndDate > Date()
-        }
+        meetings
+            .filter {
+                ($0.status == .confirmed || $0.status == .planning)
+                // 여행은 종료일 자정까지 "진행 중"으로 홈에 유지
+                && $0.effectiveEndDate > Date()
+            }
+            // 목록이 최신순(내림차순)이라 first는 가장 먼 모임 —
+            // 여행+일반 모임이 공존하면 가장 가까운 모임을 보여줘야 함
+            .min { $0.meetingDate < $1.meetingDate }
     }
 
     private var pastMeeting: Meeting? {
