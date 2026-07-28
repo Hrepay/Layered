@@ -102,7 +102,7 @@ struct MeetingDetailView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         BadgeView(text: statusText, color: statusColor)
 
-                        Text(meeting.hasPoll && meeting.place.isEmpty ? "장소 투표 중" : meeting.place)
+                        Text(meeting.displayPlace)
                             .font(.title)
                             .fontWeight(.bold)
                             .foregroundStyle(.primary)
@@ -290,7 +290,7 @@ struct MeetingDetailView: View {
 
                     // MARK: - 지도 (여행이면 일정 전체 미리보기, 아니면 단일 핀)
                     if meeting.isTrip {
-                        if !TripDayGroup.groups(from: itineraryItems).isEmpty {
+                        if !TripDayGroup.groups(from: itineraryItems).isEmpty || tripLodging != nil {
                             tripMapPreview
                         }
                     } else if let lat = meeting.placeLatitude, let lng = meeting.placeLongitude {
@@ -431,11 +431,18 @@ struct MeetingDetailView: View {
 
     // MARK: - 여행 지도 미리보기 (탭 → 전체 화면)
 
+    /// 여행의 대표 장소(숙소) 좌표 — 지도에 침대 핀으로 표시.
+    private var tripLodging: (name: String, coordinate: CLLocationCoordinate2D)? {
+        guard let lat = meeting.placeLatitude, let lng = meeting.placeLongitude,
+              !meeting.place.isEmpty else { return nil }
+        return (meeting.place, CLLocationCoordinate2D(latitude: lat, longitude: lng))
+    }
+
     @ViewBuilder
     private var tripMapPreview: some View {
         ZStack(alignment: .bottomTrailing) {
             Map(initialPosition: .automatic, interactionModes: []) {
-                TripMapLayers(groups: TripDayGroup.groups(from: itineraryItems))
+                TripMapLayers(groups: TripDayGroup.groups(from: itineraryItems), lodging: tripLodging)
             }
             .mapStyle(.standard(pointsOfInterest: .excludingAll))
 
@@ -469,7 +476,7 @@ struct MeetingDetailView: View {
     @ViewBuilder
     private var singlePlaceCard: some View {
         HStack(spacing: 14) {
-            Image(systemName: "mappin.circle.fill")
+            Image(systemName: meeting.isTrip ? "bed.double.fill" : "mappin.circle.fill")
                 .font(.title3)
                 .foregroundStyle(AppColors.primary)
                 .frame(width: 44, height: 44)
@@ -477,7 +484,7 @@ struct MeetingDetailView: View {
                 .clipShape(Circle())
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("장소")
+                Text(meeting.isTrip ? "숙소" : "장소")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Text(meeting.place)
@@ -506,7 +513,7 @@ struct MeetingDetailView: View {
     private var candidatesCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 6) {
-                Text("장소 후보")
+                Text(meeting.isTrip ? "숙소 후보" : "장소 후보")
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundStyle(.primary)

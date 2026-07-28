@@ -180,7 +180,7 @@ struct CreateMeetingView: View {
             }
         }
         .sheet(isPresented: $showPlaceSearch) {
-            PlaceSearchSheet { selected in
+            PlaceSearchSheet(onSelect: { selected in
                 searchSelectedName = selected.name
                 place = selected.name
                 placeId = selected.id
@@ -188,7 +188,7 @@ struct CreateMeetingView: View {
                 if let url = selected.detailURL {
                     placeURL = url
                 }
-            }
+            }, initialCategory: isTrip ? .lodging : .all)
             .environment(appState)
         }
         .alert("저장되지 않아요", isPresented: $showExitAlert) {
@@ -205,7 +205,8 @@ struct CreateMeetingView: View {
     private var placeSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("장소")
+                // 여행은 대표 장소를 숙소로 사용
+                Text(isTrip ? "숙소" : "장소")
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundStyle(.secondary)
@@ -233,7 +234,7 @@ struct CreateMeetingView: View {
                 PlaceCandidatesEditor(candidates: $candidates)
             } else {
                 HStack(spacing: 10) {
-                    AppTextField(placeholder: "장소를 입력해주세요", text: $place)
+                    AppTextField(placeholder: isTrip ? "숙소를 입력해주세요" : "장소를 입력해주세요", text: $place)
                         .onChange(of: place) { _, newValue in
                             // 검색으로 채운 뒤 수동 수정하면 좌표가 다른 곳을 가리키므로 무효화
                             if newValue != searchSelectedName {
@@ -281,7 +282,7 @@ struct CreateMeetingView: View {
             let options = validCandidateOptions
             let poll = Poll(
                 id: UUID().uuidString,
-                question: "어디로 갈까요?",
+                question: isTrip ? "숙소는 어디로 할까요?" : "어디로 갈까요?",
                 isAnonymous: false,
                 allowMultiple: true,
                 options: options,

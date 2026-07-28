@@ -45,8 +45,9 @@ struct Meeting: Identifiable, Codable, Hashable {
 
 extension Meeting {
     /// UI 표시용 장소명. 투표 모드(후보 단계)면 placeholder로 대체.
+    /// 여행은 대표 장소가 곧 숙소라 문구도 숙소로.
     var displayPlace: String {
-        if hasPoll && place.isEmpty { return "장소 투표 중" }
+        if hasPoll && place.isEmpty { return isTrip ? "숙소 투표 중" : "장소 투표 중" }
         return place
     }
 

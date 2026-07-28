@@ -18,13 +18,27 @@ struct TripDayGroup: Identifiable {
 
 // MARK: - 지도 레이어 (미리보기·전체 화면 공용)
 
-/// 일차별 색 핀(방문 순서 번호) + 같은 날 동선 연결선.
+/// 일차별 색 핀(방문 순서 번호) + 같은 날 동선 연결선 + 숙소 핀.
 struct TripMapLayers: MapContent {
     let groups: [TripDayGroup]
+    /// 여행의 대표 장소(숙소). 일차 필터와 무관하게 항상 표시.
+    var lodging: (name: String, coordinate: CLLocationCoordinate2D)? = nil
     var selectionId: String? = nil
     var onSelect: ((ItineraryItem) -> Void)? = nil
 
     var body: some MapContent {
+        if let lodging {
+            Annotation(lodging.name, coordinate: lodging.coordinate) {
+                Image(systemName: "bed.double.fill")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(AppColors.primary)
+                    .frame(width: 30, height: 30)
+                    .background(Circle().fill(Color(.systemBackground)))
+                    .overlay(Circle().stroke(AppColors.primary, lineWidth: 2))
+                    .shadow(color: .black.opacity(0.25), radius: 3, y: 1)
+            }
+        }
         ForEach(groups) { group in
             if group.items.count > 1 {
                 MapPolyline(coordinates: group.items.compactMap(\.coordinate))
@@ -85,6 +99,13 @@ struct TripMapView: View {
         return allGroups.filter { $0.day == selectedDay }
     }
 
+    /// 대표 장소(숙소) 좌표 — 있으면 지도에 침대 핀으로 항상 표시.
+    private var lodging: (name: String, coordinate: CLLocationCoordinate2D)? {
+        guard let lat = meeting.placeLatitude, let lng = meeting.placeLongitude,
+              !meeting.place.isEmpty else { return nil }
+        return (meeting.place, CLLocationCoordinate2D(latitude: lat, longitude: lng))
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             NavBar(title: "여행 지도", backAction: onBack)
@@ -108,7 +129,7 @@ struct TripMapView: View {
             }
             .padding(.vertical, 10)
 
-            if allGroups.isEmpty {
+            if allGroups.isEmpty && lodging == nil {
                 Spacer()
                 EmptyStateView(
                     icon: "map.fill",
@@ -121,6 +142,7 @@ struct TripMapView: View {
                     Map(position: $cameraPosition) {
                         TripMapLayers(
                             groups: visibleGroups,
+                            lodging: lodging,
                             selectionId: selection?.id,
                             onSelect: { selection = $0 }
                         )

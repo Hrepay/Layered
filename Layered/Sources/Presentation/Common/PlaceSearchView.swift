@@ -15,7 +15,19 @@ struct PlaceSearchView: View {
     @Environment(AppState.self) private var appState: AppState
 
     @Binding var query: String
-    @State private var category: PlaceSearchCategory = .all
+    @State private var category: PlaceSearchCategory
+
+    init(
+        onSelect: ((PlaceResult) -> Void)? = nil,
+        onDismissAfterSelect: (() -> Void)? = nil,
+        query: Binding<String>,
+        initialCategory: PlaceSearchCategory = .all
+    ) {
+        self.onSelect = onSelect
+        self.onDismissAfterSelect = onDismissAfterSelect
+        self._query = query
+        self._category = State(initialValue: initialCategory)
+    }
     @State private var restaurantsOnly = false
     @State private var nearMe = false
     @State private var coordinate: CLLocationCoordinate2D?
@@ -407,6 +419,9 @@ struct PlaceSearchView: View {
 
 struct PlaceSearchSheet: View {
     let onSelect: (PlaceResult) -> Void
+    /// 여행 숙소 검색처럼 특정 카테고리로 시작하고 싶을 때 지정.
+    var initialCategory: PlaceSearchCategory = .all
+
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
 
@@ -416,7 +431,8 @@ struct PlaceSearchSheet: View {
             PlaceSearchView(
                 onSelect: onSelect,
                 onDismissAfterSelect: { dismiss() },
-                query: $query
+                query: $query,
+                initialCategory: initialCategory
             )
         }
     }
