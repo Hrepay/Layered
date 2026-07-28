@@ -66,9 +66,11 @@ struct RecordDetailView: View {
                                     .font(.headline)
                                     .foregroundStyle(.primary)
 
-                                Text(formatDate(meeting.meetingDate))
+                                Text(meetingDateText)
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.7)
                             }
 
                             Spacer()
@@ -279,6 +281,15 @@ struct RecordDetailView: View {
         formatter.locale = Locale(identifier: "ko_KR")
         formatter.dateFormat = "M월 d일 (E)"
         return formatter.string(from: date)
+    }
+
+    /// 당일 모임은 시작일, 여행은 기간 + 박수.
+    private var meetingDateText: String {
+        if let period = MeetingTimeFormat.tripPeriod(meeting) {
+            let nights = MeetingTimeFormat.tripNights(meeting).map { " · \($0)" } ?? ""
+            return period + nights
+        }
+        return formatDate(meeting.meetingDate)
     }
 }
 

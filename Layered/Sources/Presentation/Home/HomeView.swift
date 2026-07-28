@@ -338,6 +338,8 @@ struct HomeView: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundStyle(.white.opacity(0.92))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     if let activity = meeting.activity, !activity.isEmpty {
@@ -508,6 +510,8 @@ struct HomeView: View {
                     .font(.subheadline)
                     .fontWeight(.bold)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
                     .padding(.bottom, 6)
 
                 // 장소 + 활동 아이콘들

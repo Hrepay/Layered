@@ -131,6 +131,8 @@ struct MeetingDetailView: View {
                                 .font(.subheadline)
                                 .fontWeight(.semibold)
                                 .foregroundStyle(.primary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.6)
                         }
 
                         Spacer()
